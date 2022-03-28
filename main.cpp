@@ -211,7 +211,7 @@ int turn_based_movement() {
     struct tile *tile = world[current_tile_y][current_tile_x];
     struct heap *turn_heap = tile->turn_heap;
     static struct character *character;
-    while ((character = heap_remove_min(turn_heap))) {
+    while ((character = (struct character *) (heap_remove_min(turn_heap)))) {
         if (character->type_enum == PLAYER) {
             clear();
             addstr("It's your turn! Enter a command or press z for help!\n");
@@ -1019,147 +1019,13 @@ int enter_mart() {
 
 }
 
-int interaction(struct heap *turn_heap) {
-    print_tile_terrain(world[WORLD_CENTER_Y][WORLD_CENTER_X]);
-    int x = WORLD_CENTER_X;
-    int y = WORLD_CENTER_Y;
-    char *command = (malloc(COMMAND_MAX_SIZE));
-    if (command == NULL) {
-        return 1;
-    }
-    printf("Enter commands to take actions. Type \"help\" for help!\n");
-    int playing = 1;
-    while (playing == 1) {
-        fgets(command, COMMAND_MAX_SIZE, stdin);
-        if (strlen(command) > 0 && command[strlen(command) - 1] == '\n') {
-            command[strlen(command) - 1] = '\0';
-        }
-        if (strcmp(command, "help") == 0) {
-            printf("Commands:\n");
-            printf("Get help: \"help\"\n");
-            printf("Pan Screen: \"n\", \"s\", \"e\", \"w\"\n");
-            printf("Fly: \"f x-coordinate y-coordinate\"\n");
-            printf("Quit: \"q\"\n");
-        } else if (strcmp(command, "n") == 0) {
-            if (change_tile(x, y - 1) == 0) {
-                y--;
-                printf("Moved North to the tile at coordinates (%d, %d)!\n", x - WORLD_CENTER_X, y - WORLD_CENTER_Y);
-            }
-            else {
-                print_tile_terrain(world[y][x]);
-                printf("You are already at the Northernmost tile!\n");
-            }
-        } else if (strcmp(command, "s") == 0) {
-            if (change_tile(x, y + 1) == 0) {
-                y++;
-                printf("Moved South to the tile at coordinates (%d, %d)!\n", x - WORLD_CENTER_X, y - WORLD_CENTER_Y);
-            }
-            else {
-                print_tile_terrain(world[y][x]);
-                printf("You are already at the Southernmost tile!\n");
-            }
-        } else if (strcmp(command, "e") == 0) {
-            if (change_tile(x + 1, y) == 0) {
-                x++;
-                printf("Moved East to the tile at coordinates (%d, %d)!\n", x - WORLD_CENTER_X, y - WORLD_CENTER_Y);
-            }
-            else {
-                print_tile_terrain(world[y][x]);
-                printf("You are already at the Easternmost tile!\n");
-            }
-        } else if (strcmp(command, "w") == 0) {
-            if (change_tile(x - 1, y) == 0) {
-                x--;
-                printf("Moved West to the tile at coordinates (%d, %d)!\n", x - WORLD_CENTER_X, y - WORLD_CENTER_Y);
-            }
-            else {
-                print_tile_terrain(world[y][x]);
-                printf("You are already at the Westernmost tile!\n");
-            }
-        } else if (strlen(command) > 0 && command[0] == 'f' && (strlen(command) == 1 || command[1] == ' ' )) {
-            int failed = 0;
-            int coordinates[2];
-            int i = -1;
-            char * split;
-            split = strtok (command, " ");
-            while (split != NULL) {
-                if (i == 0 || i == 1) {
-                    coordinates[i] = strtol(split, (char **) NULL, 10);
-                }
-                else if (i > 1) {
-                    failed = 1;
-                    printf("Command failed due to inputting more than one pair of coordinates.\n");
-                    break;
-                }
-                i++;
-                split = strtok (NULL, " ");
-            }
-            if (failed == 0 && i < 2) {
-                printf("Command failed due to inputting less than one pair of coordinates.\n");
-                failed = 1;
-            }
-            if (failed == 0) {
-                int x_out_of_bounds = 0;
-                int y_out_of_bounds = 0;
-                if (coordinates[0] < -WORLD_CENTER_X || coordinates[0] > WORLD_CENTER_X) {
-                    x_out_of_bounds = 1;
-                }
-                if (coordinates[1] < -WORLD_CENTER_Y || coordinates[1] > WORLD_CENTER_Y) {
-                    y_out_of_bounds = 1;
-                }
-                if (x_out_of_bounds == 1 && y_out_of_bounds == 1) {
-                    printf("Command failed due to the x and y coordinates being out of bounds: x = %d; y = %d.\n"
-                            , coordinates[0], coordinates[1]);
-                }
-                else if (x_out_of_bounds == 1) {
-                    printf("Command failed due to the x coordinate being out of bounds: x = %d;\n", coordinates[0]);
-                }
-                else if (y_out_of_bounds == 1) {
-                    printf("Command failed due to the y coordinate being out of bounds: y = %d.\n", coordinates[1]);
-                }
-                else {
-                    x = WORLD_CENTER_X + coordinates[0];
-                    y = WORLD_CENTER_Y + coordinates[1];
-                    change_tile(x, y);
-                    printf("Flew to the tile at coordinates (%d, %d)!\n", x - WORLD_CENTER_X, y - WORLD_CENTER_Y);
-                }
-            }
-        } else if (strcmp(command, "q") == 0) {
-            printf("Are you sure you want to Quit (y/n)? All progress will be lose.\n");
-            int processed = 0;
-            while (processed == 0) {
-                fgets(command, COMMAND_MAX_SIZE, stdin);
-                if (strlen(command) > 0 && command[strlen(command) - 1] == '\n') {
-                    command[strlen(command) - 1] = '\0';
-                }
-                if (strcmp(command, "y") == 0) {
-                    printf("You have exited the game. All progress has been lost.\n");
-                    playing = 0;
-                    break;
-                } else if (strcmp(command, "n") == 0) {
-                    printf("You have chosen to continue playing!\n");
-                    processed = 1;
-                } else {
-                    printf("Invalid command. Please input \"y\" to quit or \"n\" to keep playing.\n");
-                }
-            }
-        } else {
-            printf("%s is not a valid command. Type \"help\" for help!\n", command);
-        }
-    }
-    free(command);
-
-    return 0;
-
-}
-
 int change_tile(int x, int y) {
 
     //todo: ASSIGNED: upon entering map set all trainers there to same heap time as PC
     //todo: BUG TEST: test moving onto new tile with large game time for trainers time being updated correctly
     if (x >= 0 && x < WORLD_WIDTH_X && y >= 0 && y < WORLD_LENGTH_Y) {
         if (world[y][x] == NULL) {
-            struct tile *new_tile = (malloc(sizeof(struct tile)));
+            struct tile *new_tile = new struct tile();
             *new_tile = create_tile(x, y);
             world[y][x] = new_tile;
         }
@@ -1739,7 +1605,7 @@ int place_player_character(struct tile *tile) {
         }
     }
 
-    player_character = malloc(sizeof(struct character));
+    player_character = new struct character;
     player_character->x = x;
     player_character->y = y;
     player_character->type_enum = PLAYER;
@@ -1838,7 +1704,7 @@ int place_trainer_type(struct tile *tile, int num_trainer, enum character_type t
                 }
             }
         }
-        struct character *trainer = malloc(sizeof(struct character));
+        struct character *trainer = new struct character();
         trainer->x = x;
         trainer->y = y;
         trainer->type_enum = trainer_type;
@@ -1913,7 +1779,7 @@ int dijkstra(struct tile *tile, enum character_type trainer_type) {
             }
         }
     }
-    while ((point = heap_remove_min(&heap))) {
+    while ((point = (struct point*) (&heap))) {
         point->heap_node = NULL;
         for (int y = -1; y <= 1; y++) {
             for (int x = -1; x <= 1; x++) {
