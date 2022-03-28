@@ -217,7 +217,7 @@ int turn_based_movement() {
             addstr("It's your turn! Enter a command or press z for help!\n");
             print_tile_terrain(tile);
             refresh();
-            int result = player_turn(turn_heap);
+            int result = player_turn();
             if (result != 0) {
                 return result;
             }
@@ -394,7 +394,7 @@ int turn_based_movement() {
                         if ((x != 0 || y != 0) && new_x > 0 && new_x < TILE_WIDTH_X && new_y > 0 && new_y < TILE_LENGTH_Y
                             && tile->tile[new_y][new_x].terrain.rival_weight != INT_MAX
                             && (tile->tile[new_y][new_x].character == NULL
-                                || (tile->tile[new_y][new_x].character == PLAYER && character->defeated == 0))) {
+                                || (tile->tile[new_y][new_x].character->type_enum == PLAYER && character->defeated == 0))) {
                             found = 1;
                         }
                     }
@@ -428,7 +428,7 @@ int turn_based_movement() {
                             if ((tile->tile[character->y + y][character->x + x].terrain.id
                                  == tile->tile[character->y][character->x].terrain.id)
                                 && (tile->tile[character->y][character->x].character == NULL
-                                    || (tile->tile[character->y][character->x].character == PLAYER && character->defeated == 0))) {
+                                    || (tile->tile[character->y][character->x].character->type_enum == PLAYER && character->defeated == 0))) {
                                 has_possible_direction = 1;
                             }
                         }
@@ -515,9 +515,9 @@ int player_turn() {
             new_x--;
         } else if (input == '>') {
             if (tile->tile[y][x].terrain.id == center.id) {
-                enter_center(player_character);
+                enter_center();
             } else if (tile->tile[y][x].terrain.id == mart.id) {
-                enter_mart(player_character);
+                enter_mart();
             } else {
                 clear();
                 addstr("There is no pokecenter or pokemart here so you can't enter one!\n");
