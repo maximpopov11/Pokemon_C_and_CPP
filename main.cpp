@@ -1,10 +1,10 @@
-#include <stdlib.h>
-#include <time.h>
-#include <limits.h>
-#include <string.h>
-#include <math.h>
+#include <cstdlib>
+#include <ctime>
+#include <climits>
+#include <cmath>
 #include <getopt.h>
 #include <ncurses.h>
+#include <string>
 #include "heap.h"
 
 #define SCREEN_HEIGHT 24
@@ -14,7 +14,6 @@
 #define WORLD_LENGTH_Y 399
 #define WORLD_CENTER_X 199
 #define WORLD_CENTER_Y 199
-#define COMMAND_MAX_SIZE 256
 #define TERRAIN_BORDER_WEIGHT 1
 #define MINIMUM_TURN 5
 //77 = minimum number of paths in tile - 1 for PC so all trainers can be placed
@@ -112,7 +111,6 @@ int move_character(int x, int y, int new_x, int new_y);
 int combat(struct character *from_character, struct character *to_character);
 int enter_center();
 int enter_mart();
-int interaction(struct heap *turn_heap);
 int change_tile(int x, int y);
 struct tile create_tile(int x, int y);
 struct tile create_empty_tile();
@@ -131,7 +129,6 @@ int dijkstra(struct tile *tile, enum character_type trainer_type);
 int legal_overwrite(struct point point);
 double distance(int x1, int y1, int x2, int y2);
 int print_tile_terrain(struct tile *tile);
-int reset_color();
 int print_tile_trainer_distances(struct tile *tile);
 int print_tile_trainer_distances_printer(struct tile *tile);
 
@@ -592,7 +589,7 @@ int player_turn() {
                 screen_row++;
             }
             refresh();
-            int command = -1;
+            chtype command = -1;
             while (command != 27 && command != ACS_UARROW && command != ACS_DARROW) {
                 command = getch();
                 screen_row = 1;
@@ -1609,7 +1606,7 @@ int place_player_character(struct tile *tile) {
     player_character->x = x;
     player_character->y = y;
     player_character->type_enum = PLAYER;
-    player_character->type_string = "PLAYER";
+    std::string (player_character->type_string) = "PLAYER";
     player_character->printable_character = '@';
     player_character->color = COLOR_CYAN;
     player_character->turn = 0;
@@ -1710,22 +1707,22 @@ int place_trainer_type(struct tile *tile, int num_trainer, enum character_type t
         trainer->type_enum = trainer_type;
         //initialize type_string
         if (trainer->type_enum == RIVAL) {
-            trainer->type_string = "RIVAL";
+            std::string (trainer->type_string) = "RIVAL";
         }
         else if (trainer->type_enum == HIKER) {
-            trainer->type_string = "HIKER";
+            std::string (trainer->type_string) = "HIKER";
         }
         else if (trainer->type_enum == RANDOM_WALKER) {
-            trainer->type_string = "RANDOM WALKER";
+            std::string (trainer->type_string) = "RANDOM WALKER";
         }
         else if (trainer->type_enum == PACER) {
-            trainer->type_string = "PACER";
+            std::string (trainer->type_string) = "PACER";
         }
         else if (trainer->type_enum == WANDERER) {
-            trainer->type_string = "WANDERER";
+            std::string (trainer->type_string) = "WANDERER";
         }
         else if (trainer->type_enum == STATIONARY) {
-            trainer->type_string = "STATIONARY";
+            std::string (trainer->type_string) = "STATIONARY";
         }
         else {
             //trainer is not one of the trainer types
