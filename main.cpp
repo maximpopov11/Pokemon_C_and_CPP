@@ -16,7 +16,7 @@
 #define WORLD_CENTER_Y 199
 #define TERRAIN_BORDER_WEIGHT 1
 #define MINIMUM_TURN 5
-//77 = minimum number of paths in tile - 1 for PC so all trainers can be placed
+//77 = minimum number of paths in Tile - 1 for PC so all trainers can be placed
 #define MAX_NUM_TRAINERS 77
 
 //Author Maxim Popov
@@ -30,8 +30,8 @@ enum character_type {
     STATIONARY
 };
 
-struct terrain {
-    //id is for comparison
+class Terrain {
+public:
     int id;
     char printable_character;
     int path_weight;
@@ -41,19 +41,21 @@ struct terrain {
     short color;
 };
 
-struct terrain none = {0,'_', 0, 0, 0, 0, COLOR_BLACK};
-struct terrain edge = {1, '%', INT_MAX, INT_MAX, INT_MAX, INT_MAX, COLOR_WHITE};
-struct terrain clearing =
+//todo: BUG: Pyrite Crashes on next line "what():  basic_string::_M_construct null not valid". CLion crashes on initscr (ncurses) later.
+static Terrain none = {0, '_', 0, 0, 0, 0, COLOR_BLACK};
+static Terrain edge = {1, '%', INT_MAX, INT_MAX, INT_MAX, INT_MAX, COLOR_WHITE};
+static Terrain clearing =
         {2, '.', 5, 10, 10, 5, COLOR_YELLOW};
-struct terrain grass =
+static Terrain grass =
         {3, ',', 10, 15, 15, 5, COLOR_GREEN};
-struct terrain forest = {4, '^', 100, INT_MAX, INT_MAX, 10, COLOR_GREEN};
-struct terrain mountain = {5, '%', 150, INT_MAX, INT_MAX, 10, COLOR_WHITE};
-struct terrain lake = {6, '~', 200, INT_MAX, INT_MAX, INT_MAX, COLOR_BLUE};
-struct terrain path = {7,'#', 0, 5, 5, 5, COLOR_YELLOW};
-struct terrain center = {8, 'C', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA};
-struct terrain mart = {9, 'M', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA};
+static Terrain forest = {4, '^', 100, INT_MAX, INT_MAX, 10, COLOR_GREEN};
+static Terrain mountain = {5, '%', 150, INT_MAX, INT_MAX, 10, COLOR_WHITE};
+static Terrain lake = {6, '~', 200, INT_MAX, INT_MAX, INT_MAX, COLOR_BLUE};
+static Terrain path = {7, '#', 0, 5, 5, 5, COLOR_YELLOW};
+static Terrain center = {8, 'C', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA};
+static Terrain mart = {9, 'M', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA};
 
+//todo: ASSIGNED: create character abstract class and player_character and non_player_character implementations
 struct character {
     int x;
     int y;
@@ -69,19 +71,21 @@ struct character {
     int defeated;
 };
 
-struct point {
+class Point {
+public:
     int x;
     int y;
-    struct terrain terrain;
+    Terrain terrain;
     //for looped non-queue plant_seeds growth
-    struct terrain grow_into;
+    Terrain grow_into;
     struct character *character;
     int distance;
     heap_node_t *heap_node;
 };
 
-struct tile {
-    struct point tile[TILE_LENGTH_Y][TILE_WIDTH_X];
+class Tile {
+public:
+    Point tile[TILE_LENGTH_Y][TILE_WIDTH_X];
     int x;
     int y;
     int north_x;
@@ -92,11 +96,13 @@ struct tile {
     struct heap *turn_heap;
 };
 
+//todo: ASSIGNED: check that there are no more uses of "struct"
+
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
 int hiker_distance_tile [TILE_LENGTH_Y][TILE_WIDTH_X];
 
 static int32_t comparator_trainer_distance_tile(const void *key, const void *with) {
-    return ((struct point *) key)->distance - ((struct point *) with)->distance;
+    return ((Point *) key)->distance - ((Point *) with)->distance;
 }
 
 static int32_t comparator_character_movement(const void *key, const void *with) {
@@ -112,27 +118,27 @@ int combat(struct character *from_character, struct character *to_character);
 int enter_center();
 int enter_mart();
 int change_tile(int x, int y);
-struct tile create_tile(int x, int y);
-struct tile create_empty_tile();
-int generate_terrain(struct tile *tile);
-int plant_seeds(struct tile *tile, struct terrain terrain, int num_seeds);
-int grow_seeds(struct tile *tile);
-int place_edge(struct tile *tile);
-int set_terrain_border_weights(struct tile *tile);
-int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int west_y);
-int generate_buildings(struct tile *tile, int x, int y);
-int place_building(struct tile *tile, struct terrain terrain, double chance);
-int place_player_character(struct tile *tile);
-int place_trainers(struct tile *tile);
-int place_trainer_type(struct tile *tile, int num_trainer, enum character_type trainer_type, char character);
-int dijkstra(struct tile *tile, enum character_type trainer_type);
-int legal_overwrite(struct point point);
+Tile create_tile(int x, int y);
+Tile create_empty_tile();
+int generate_terrain(Tile *tile);
+int plant_seeds(Tile *tile, Terrain terrain, int num_seeds);
+int grow_seeds(Tile *tile);
+int place_edge(Tile *tile);
+int set_terrain_border_weights(Tile *tile);
+int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y);
+int generate_buildings(Tile *tile, int x, int y);
+int place_building(Tile *tile, Terrain terrain, double chance);
+int place_player_character(Tile *tile);
+int place_trainers(Tile *tile);
+int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_type, char character);
+int dijkstra(Tile *tile, enum character_type trainer_type);
+int legal_overwrite(Point point);
 double distance(int x1, int y1, int x2, int y2);
-int print_tile_terrain(struct tile *tile);
-int print_tile_trainer_distances(struct tile *tile);
-int print_tile_trainer_distances_printer(struct tile *tile);
+int print_tile_terrain(Tile *tile);
+int print_tile_trainer_distances(Tile *tile);
+int print_tile_trainer_distances_printer(Tile *tile);
 
-struct tile *world[WORLD_LENGTH_Y][WORLD_WIDTH_X] = {0};
+Tile *world[WORLD_LENGTH_Y][WORLD_WIDTH_X] = {0};
 int current_tile_x;
 int current_tile_y;
 struct character *player_character;
@@ -169,14 +175,14 @@ int main(int argc, char *argv[]) {
     //run program
     srand(time(NULL));
     initialize_terminal();
-    struct tile home_tile = create_tile(WORLD_CENTER_X, WORLD_CENTER_Y);
+    Tile home_tile = create_tile(WORLD_CENTER_X, WORLD_CENTER_Y);
     current_tile_x = WORLD_CENTER_X;
     current_tile_y = WORLD_CENTER_Y;
     world[WORLD_CENTER_Y][WORLD_CENTER_X] = &home_tile;
     place_player_character(world[current_tile_y][current_tile_x]);
     while (turn_based_movement() == -1) {
         //-1 signals map was changed: call turn_based_movement for new map/turn heap
-        //old and new tile and heap have been updated correctly in change tile (removed from old heap in turn_based_movement)
+        //old and new Tile and heap have been updated correctly in change Tile (removed from old heap in turn_based_movement)
     }
     endwin();
     return 0;
@@ -205,7 +211,7 @@ int initialize_terminal() {
 
 int turn_based_movement() {
 
-    struct tile *tile = world[current_tile_y][current_tile_x];
+    Tile *tile = world[current_tile_y][current_tile_x];
     struct heap *turn_heap = tile->turn_heap;
     static struct character *character;
     while ((character = (struct character *) (heap_remove_min(turn_heap)))) {
@@ -224,7 +230,7 @@ int turn_based_movement() {
                 //no longer paths to PC
                 character->turn += MINIMUM_TURN;
             } else {
-                //find a legal point to change_tile to
+                //find a legal Point to change_tile to
                 int new_x;
                 int new_y;
                 int new_distance = INT_MAX;
@@ -247,11 +253,11 @@ int turn_based_movement() {
                     }
                 }
                 if (new_distance != INT_MAX) {
-                    //if legal point to move to found, change_tile there
+                    //if legal Point to move to found, change_tile there
                     move_character(character->x, character->y, new_x, new_y);
                     character->turn += tile->tile[new_y][new_x].terrain.rival_weight;
                 } else {
-                    //no legal point to change_tile to found
+                    //no legal Point to change_tile to found
                     character->turn += MINIMUM_TURN;
                 }
             }
@@ -471,7 +477,7 @@ int turn_based_movement() {
 
 int player_turn() {
 
-    struct tile *tile = world[current_tile_y][current_tile_x];
+    Tile *tile = world[current_tile_y][current_tile_x];
     int turn_completed = 0;
     int in_help = 0;
     int x = player_character->x;
@@ -871,10 +877,10 @@ int player_turn() {
 
         //call movement function if moving
         if (moving == 1) {
-            //if terrain can be crossed
+            //if Terrain can be crossed
             if (tile->tile[new_y][new_x].terrain.pc_weight == INT_MAX) {
                 clear();
-                addstr("You can't cross that kind of terrain!\n");
+                addstr("You can't cross that kind of Terrain!\n");
                 print_tile_terrain(tile);
             }
                 //if there is an undefeated trainer there
@@ -887,11 +893,11 @@ int player_turn() {
             else if (new_y == 0 || new_y == TILE_LENGTH_Y - 1 || new_x == 0 || new_x == TILE_WIDTH_X - 1) {
                 if (change_tile(tile->x + new_x - x, tile->y + new_y - y) == 0) {
                     tile->tile[y][x].character = NULL;
-                    //tile in this function is new tile
+                    //Tile in this function is new Tile
                     tile = world[current_tile_y][current_tile_x];
                     //successfully changed tiles
                     //updates PC coordinates
-                    //todo: BUG: going back to old map SOMETIMES creates a new map replacing old map: debug by writing map coords when in map
+                    //todo: RUN BUG: going back to old map SOMETIMES creates a new map replacing old map: debug by writing map coords when in map
                     if (new_x == 0) {
                         player_character->x = TILE_WIDTH_X - 2;
                     } else if (new_x == TILE_WIDTH_X - 1) {
@@ -909,8 +915,8 @@ int player_turn() {
                     return -1;
                 }
                 else {
-                    //todo: BUG TEST: test trying to move off of edge of world
-                    //cannot change tile because at edge of world
+                    //todo: RUN BUG TEST: test trying to move off of edge of world
+                    //cannot change Tile because at edge of world
                     clear();
                     addstr("You can't go off of the edge of the world like that! It's your turn! Enter a command or press z for help!\n");
                     print_tile_terrain(tile);
@@ -933,7 +939,7 @@ int player_turn() {
 
 int move_character(int x, int y, int new_x, int new_y) {
 
-    struct tile *tile = world[current_tile_y][current_tile_x];
+    Tile *tile = world[current_tile_y][current_tile_x];
     struct character *from_character = tile->tile[y][x].character;
     struct character *to_character = tile->tile[new_y][new_x].character;
     //if moving onto PC
@@ -1018,24 +1024,24 @@ int enter_mart() {
 
 int change_tile(int x, int y) {
 
-    //todo: ASSIGNED: upon entering map set all trainers there to same heap time as PC
-    //todo: BUG TEST: test moving onto new tile with large game time for trainers time being updated correctly
+    //todo: RUN ASSIGNED: upon entering map set all trainers there to same heap time as PC
+    //todo: RUN BUG TEST: test moving onto new Tile with large game time for trainers time being updated correctly
     if (x >= 0 && x < WORLD_WIDTH_X && y >= 0 && y < WORLD_LENGTH_Y) {
         if (world[y][x] == NULL) {
-            struct tile *new_tile = new struct tile();
+            Tile *new_tile = new Tile();
             *new_tile = create_tile(x, y);
             world[y][x] = new_tile;
         }
         world[current_tile_y][current_tile_x]->player_character = NULL;
         current_tile_x = x;
         current_tile_y = y;
-        struct tile *new_tile = world[current_tile_y][current_tile_x];
+        Tile *new_tile = world[current_tile_y][current_tile_x];
         new_tile->player_character = player_character;
         //set all characters in heap to same turn value as PC
-        //todo: BUG: moving between tiles sometimes crashes
-        //todo: BUG: upon re-entering ORIGINAL map (but not other maps) post leaving it, trainers never move
-        //todo: BUG: heap insert crash: fix with 1 global heap and remove/re-add trainers (with time update) upon changing maps
-        //todo: BUG TEST: uncomment below once heap crash insert bug fixed
+        //todo: RUN BUG: moving between tiles sometimes crashes
+        //todo: RUN BUG: upon re-entering ORIGINAL map (but not other maps) post leaving it, trainers never move
+        //todo: RUN BUG: heap insert crash: fix with 1 global heap and remove/re-add trainers (with time update) upon changing maps
+        //todo: RUN BUG TEST: uncomment below once heap crash insert bug fixed
 //        if (new_tile->turn_heap->size > 0) {
 //            struct character *trainer = heap_remove_min(new_tile->turn_heap);
 //            while (trainer->turn < player_character->turn) {
@@ -1053,9 +1059,9 @@ int change_tile(int x, int y) {
 
 }
 
-struct tile create_tile(int x, int y) {
+Tile create_tile(int x, int y) {
 
-    struct tile tile = create_empty_tile();
+    Tile tile = create_empty_tile();
     tile.x = x;
     tile.y = y;
     generate_terrain(&tile);
@@ -1094,10 +1100,10 @@ struct tile create_tile(int x, int y) {
 
 }
 
-struct tile create_empty_tile() {
+Tile create_empty_tile() {
 
-    struct tile tile;
-    struct point empty_point =
+    Tile tile;
+    Point empty_point =
             {-1, -1,none, none, NULL, INT_MAX, NULL};
     for (int i = 0; i < TILE_LENGTH_Y; i++) {
         for (int j = 0; j < TILE_WIDTH_X; j++) {
@@ -1117,7 +1123,7 @@ struct tile create_empty_tile() {
 
 }
 
-int generate_terrain(struct tile *tile) {
+int generate_terrain(Tile *tile) {
 
     const int NUM_TALL_GRASS_SEEDS = rand() % 5 + 2;
     const int NUM_CLEARING_SEEDS = rand() % 5 + 2;
@@ -1137,7 +1143,7 @@ int generate_terrain(struct tile *tile) {
 
 }
 
-int plant_seeds(struct tile *tile, struct terrain terrain, int num_seeds) {
+int plant_seeds(Tile *tile, Terrain terrain, int num_seeds) {
 
     for (int i = 0; i < num_seeds; i++) {
         int placed = 0;
@@ -1155,16 +1161,16 @@ int plant_seeds(struct tile *tile, struct terrain terrain, int num_seeds) {
 
 }
 
-int grow_seeds(struct tile *tile) {
+int grow_seeds(Tile *tile) {
 
     //queue implementation:
-    //add each (coordinate, terrain) tuple structure to queue
+    //add each (coordinate, Terrain) tuple structure to queue
     //while queue not empty
     //pop
-    //if does not have terrain
-    //give terrain as specified in tuple
+    //if does not have Terrain
+    //give Terrain as specified in tuple
     //give space weight value for dijkstra (as defined earlier)
-    //add all spaces within 3x and 1y to queue with same terrain
+    //add all spaces within 3x and 1y to queue with same Terrain
 
     //loop through non-edge to grow seeds
     int complete = 0;
@@ -1175,13 +1181,13 @@ int grow_seeds(struct tile *tile) {
         for (int i = 1; i < TILE_LENGTH_Y - 1; i++) {
             for (int j = 1; j < TILE_WIDTH_X - 1; j++) {
                 if (tile->tile[i][j].terrain.id == none.id) {
-                    //loop through nearby area to copy first terrain found
+                    //loop through nearby area to copy first Terrain found
                     for (int k = -1; k <=1; k++) {
                         for (int l = -1; l <= 1; l++) {
                             int x = j+k;
                             int y = i+l;
                             if (x > 0 && x < TILE_WIDTH_X - 1 && y > 0 && y < TILE_LENGTH_Y - 1) {
-                                struct terrain new_terrain = tile->tile[y][x].terrain;
+                                Terrain new_terrain = tile->tile[y][x].terrain;
                                 if (new_terrain.id != none.id) {
                                     tile->tile[i][j].grow_into = new_terrain;
                                 }
@@ -1195,7 +1201,7 @@ int grow_seeds(struct tile *tile) {
         //grow what must grow
         for (int i = 1; i < TILE_LENGTH_Y - 1; i++) {
             for (int j = 1; j < TILE_WIDTH_X - 1; j++) {
-                struct terrain new_terrain = tile->tile[i][j].grow_into;
+                Terrain new_terrain = tile->tile[i][j].grow_into;
                 if (new_terrain.id != none.id) {
                     tile->tile[i][j].terrain = new_terrain;
                 }
@@ -1207,7 +1213,7 @@ int grow_seeds(struct tile *tile) {
 
 }
 
-int place_edge(struct tile *tile) {
+int place_edge(Tile *tile) {
 
     //places edge (stones with different name and higher weight) on edges
     for (int i = 0; i < TILE_WIDTH_X; i ++) {
@@ -1223,18 +1229,18 @@ int place_edge(struct tile *tile) {
 
 }
 
-int set_terrain_border_weights(struct tile *tile) {
+int set_terrain_border_weights(Tile *tile) {
 
-    //Sets borders between non-edge terrain types to weight 0
+    //Sets borders between non-edge Terrain types to weight 0
     for (int i = 1; i < TILE_LENGTH_Y - 1; i++) {
         for (int j = 1; j < TILE_WIDTH_X - 1; j++) {
-            struct terrain terrain = tile->tile[i][j].terrain;
+            Terrain terrain = tile->tile[i][j].terrain;
             for (int k = -1; k <=1; k++) {
                 for (int l = -1; l <= 1; l++) {
                     int x = j+k;
                     int y = i+l;
                     if (x > 0 && x < TILE_WIDTH_X - 1 && y > 0 && y < TILE_LENGTH_Y - 1) {
-                        struct terrain other_terrain = tile->tile[y][x].terrain;
+                        Terrain other_terrain = tile->tile[y][x].terrain;
                         if (terrain.id != other_terrain.id && other_terrain.id != edge.id) {
                             tile->tile[i][j].terrain.path_weight = TERRAIN_BORDER_WEIGHT;
                         }
@@ -1248,7 +1254,7 @@ int set_terrain_border_weights(struct tile *tile) {
 
 }
 
-int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int west_y) {
+int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y) {
 
     north_x = 39;
     south_x = 39;
@@ -1422,7 +1428,7 @@ int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int 
 //    current_y = 0;
 //    last_move = 'x';
 //    moves_since_last_change = 0;
-//    tile->tile[current_y][current_x].terrain = terrain_path;
+//    Tile->Tile[current_y][current_x].Terrain = terrain_path;
 //    while (current_y < TILE_LENGTH_Y - 2) {
 //        //determine weights
 //        int east_weight = INT_MAX;
@@ -1430,18 +1436,18 @@ int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int 
 //        int south_weight = INT_MAX;
 //        if (current_x < TILE_WIDTH_X - 4 && last_move != 'w'
 //            && !(moves_since_last_change > repetitive_limit && last_move == 'e')) {
-//            east_weight = tile->tile[current_y][current_x + 1].weight;
+//            east_weight = Tile->Tile[current_y][current_x + 1].weight;
 //        }
 //        if (current_x > 2 && last_move != 'e' && !(moves_since_last_change > repetitive_limit && last_move == 'w')) {
-//            west_weight = tile->tile[current_y][current_x - 1].weight;
+//            west_weight = Tile->Tile[current_y][current_x - 1].weight;
 //        }
 //        if (current_y < TILE_LENGTH_Y - 1 && !(moves_since_last_change > repetitive_limit && last_move == 's')) {
-//            south_weight = tile->tile[current_y + 1][current_x].weight;
+//            south_weight = Tile->Tile[current_y + 1][current_x].weight;
 //        }
 //        //choose lowest weight
 //        if (east_weight < west_weight && east_weight < south_weight) {
 //            current_x++;
-//            tile->tile[current_y][current_x].terrain = terrain_path;
+//            Tile->Tile[current_y][current_x].Terrain = terrain_path;
 //            if (last_move == 'e') {
 //                moves_since_last_change++;
 //            }
@@ -1452,7 +1458,7 @@ int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int 
 //        }
 //        else if (west_weight < south_weight) {
 //            current_x--;
-//            tile->tile[current_y][current_x].terrain = terrain_path;
+//            Tile->Tile[current_y][current_x].Terrain = terrain_path;
 //            if (last_move == 'w') {
 //                moves_since_last_change++;
 //            }
@@ -1463,7 +1469,7 @@ int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int 
 //        }
 //        else {
 //            current_y++;
-//            tile->tile[current_y][current_x].terrain = terrain_path;
+//            Tile->Tile[current_y][current_x].Terrain = terrain_path;
 //            if (last_move == 's') {
 //                moves_since_last_change++;
 //            }
@@ -1473,14 +1479,14 @@ int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int 
 //            }
 //        }
 //    }
-//    tile->tile[current_y + 1][current_x].terrain = terrain_path;
+//    Tile->Tile[current_y + 1][current_x].Terrain = terrain_path;
 //
 //    //West/East path
 //    current_x = 0;
 //    current_y = west_y;
 //    last_move = 'x';
 //    moves_since_last_change = 0;
-//    tile->tile[current_y][current_x].terrain = terrain_path;
+//    Tile->Tile[current_y][current_x].Terrain = terrain_path;
 //    while (current_x < TILE_WIDTH_X - 2) {
 //        //determine weights
 //        int north_weight = INT_MAX;
@@ -1488,18 +1494,18 @@ int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int 
 //        int east_weight = INT_MAX;
 //        if (current_y < TILE_LENGTH_Y - 3 && last_move != 'n'
 //            && !(moves_since_last_change > repetitive_limit && last_move == 's')) {
-//            south_weight = tile->tile[current_y + 1][current_x].weight;
+//            south_weight = Tile->Tile[current_y + 1][current_x].weight;
 //        }
 //        if (current_y > 2 && last_move != 's' && !(moves_since_last_change > repetitive_limit && last_move == 'n')) {
-//            north_weight = tile->tile[current_y - 1][current_x].weight;
+//            north_weight = Tile->Tile[current_y - 1][current_x].weight;
 //        }
 //        if (current_x < TILE_WIDTH_X - 2 && !(moves_since_last_change > repetitive_limit && last_move == 'e')) {
-//            east_weight = tile->tile[current_y][current_x + 1].weight;
+//            east_weight = Tile->Tile[current_y][current_x + 1].weight;
 //        }
 //        //choose lowest weight
 //        if (north_weight < south_weight && north_weight < east_weight) {
 //            current_y--;
-//            tile->tile[current_y][current_x].terrain = terrain_path;
+//            Tile->Tile[current_y][current_x].Terrain = terrain_path;
 //            if (last_move == 'n') {
 //                moves_since_last_change++;
 //            }
@@ -1510,7 +1516,7 @@ int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int 
 //        }
 //        else if (south_weight < east_weight) {
 //            current_y++;
-//            tile->tile[current_y][current_x].terrain = terrain_path;
+//            Tile->Tile[current_y][current_x].Terrain = terrain_path;
 //            if (last_move == 's') {
 //                moves_since_last_change++;
 //            }
@@ -1521,7 +1527,7 @@ int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int 
 //        }
 //        else {
 //            current_x++;
-//            tile->tile[current_y][current_x].terrain = terrain_path;
+//            Tile->Tile[current_y][current_x].Terrain = terrain_path;
 //            if (last_move == 'e') {
 //                moves_since_last_change++;
 //            }
@@ -1531,18 +1537,18 @@ int generate_paths(struct tile *tile, int north_x, int south_x, int east_y, int 
 //            }
 //        }
 //    }
-//    tile->tile[current_y][current_x + 1].terrain = terrain_path;
+//    Tile->Tile[current_y][current_x + 1].Terrain = terrain_path;
 //
-//    tile->north_x = north_x;
-//    tile->south_x = south_x;
-//    tile->west_y = west_y;
-//    tile ->east_y = east_y;
+//    Tile->north_x = north_x;
+//    Tile->south_x = south_x;
+//    Tile->west_y = west_y;
+//    Tile ->east_y = east_y;
 
     return 0;
 
 }
 
-int generate_buildings(struct tile *tile, int x, int y) {
+int generate_buildings(Tile *tile, int x, int y) {
 
     double chance;
     if (x == WORLD_CENTER_X && y == WORLD_CENTER_Y) {
@@ -1561,7 +1567,7 @@ int generate_buildings(struct tile *tile, int x, int y) {
 
 }
 
-int place_building(struct tile *tile, struct terrain terrain, double chance) {
+int place_building(Tile *tile, Terrain terrain, double chance) {
 
     if (rand() % 100 < chance) {
         int x;
@@ -1570,7 +1576,7 @@ int place_building(struct tile *tile, struct terrain terrain, double chance) {
         while (valid == 1) {
             x = rand() % (TILE_WIDTH_X - 2) + 1;
             y = rand() % (TILE_LENGTH_Y - 2) + 1;
-            struct point point = tile->tile[y][x];
+            Point point = tile->tile[y][x];
             if (!legal_overwrite(point)) {
                 if ((x > 0 && tile->tile[y][x - 1].terrain.id == path.id)
                     || (x < TILE_WIDTH_X - 1 && tile->tile[y][x + 1].terrain.id == path.id)
@@ -1587,7 +1593,7 @@ int place_building(struct tile *tile, struct terrain terrain, double chance) {
 
 }
 
-int place_player_character(struct tile *tile) {
+int place_player_character(Tile *tile) {
 
     struct heap *turn_heap = tile->turn_heap;
 
@@ -1624,9 +1630,9 @@ int place_player_character(struct tile *tile) {
 
 }
 
-int place_trainers(struct tile *tile) {
+int place_trainers(Tile *tile) {
 
-    //todo: BUG: trainers placed illegally (ex. rivals in mountains)
+    //todo: RUN BUG: trainers placed illegally (ex. rivals in mountains)
     int num_trainers_copy = num_trainers;
     int num_rivals = 0;
     int num_hikers = 0;
@@ -1676,7 +1682,7 @@ int place_trainers(struct tile *tile) {
 
 }
 
-int place_trainer_type(struct tile *tile, int num_trainer, enum character_type trainer_type, char character) {
+int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_type, char character) {
 
     struct heap *turn_heap = tile->turn_heap;
     while (num_trainer > 0) {
@@ -1743,7 +1749,7 @@ int place_trainer_type(struct tile *tile, int num_trainer, enum character_type t
 
 }
 
-int dijkstra(struct tile *tile, enum character_type trainer_type) {
+int dijkstra(Tile *tile, enum character_type trainer_type) {
 
     int start_x = tile->player_character->x;
     int start_y =tile->player_character->y;
@@ -1756,7 +1762,7 @@ int dijkstra(struct tile *tile, enum character_type trainer_type) {
     tile->tile[start_y][start_x].distance = 0;
 
     struct heap heap;
-    static struct point *point;
+    static Point *point;
     heap_init(&heap, comparator_trainer_distance_tile, NULL);
     for (int y = 0; y < TILE_LENGTH_Y; y++) {
         for (int x = 0; x < TILE_WIDTH_X; x++) {
@@ -1776,13 +1782,13 @@ int dijkstra(struct tile *tile, enum character_type trainer_type) {
             }
         }
     }
-    while ((point = (struct point*) (&heap))) {
+    while ((point = (Point*) (&heap))) {
         point->heap_node = NULL;
         for (int y = -1; y <= 1; y++) {
             for (int x = -1; x <= 1; x++) {
                 if (point->y + y >= 0 && point->y + y < TILE_LENGTH_Y && point->x + x >= 0 && point->x + x < TILE_WIDTH_X)
                 {
-                    struct point *neighbor = &(tile->tile[point->y + y][point->x + x]);
+                    Point *neighbor = &(tile->tile[point->y + y][point->x + x]);
                     int candidate_distance;
                     if (trainer_type == RIVAL) {
                         candidate_distance = point->distance + neighbor->terrain.rival_weight;
@@ -1801,7 +1807,7 @@ int dijkstra(struct tile *tile, enum character_type trainer_type) {
     }
     heap_delete(&heap);
 
-    //updates appropriate trainer distance tile for the data to endure through future dijkstra calls
+    //updates appropriate trainer distance Tile for the data to endure through future dijkstra calls
     for (int i = 0; i < TILE_LENGTH_Y; i++) {
         for (int j = 0; j < TILE_WIDTH_X; j++) {
             if (trainer_type == RIVAL) {
@@ -1818,7 +1824,7 @@ int dijkstra(struct tile *tile, enum character_type trainer_type) {
 
 }
 
-int legal_overwrite(struct point point) {
+int legal_overwrite(Point point) {
 
     if (point.terrain.id == edge.id
         || point.terrain.id == path.id
@@ -1840,16 +1846,16 @@ double distance(int x1, int y1, int x2, int y2) {
     return value;
 }
 
-int print_tile_terrain(struct tile *tile) {
+int print_tile_terrain(Tile *tile) {
 
     for (int y = 0; y < TILE_LENGTH_Y; y++) {
         for (int x = 0; x < TILE_WIDTH_X; x++) {
             char printable_character = tile->tile[y][x].terrain.printable_character;
             if (tile->tile[y][x].character != NULL) {
                 printable_character = tile->tile[y][x].character->printable_character;
-                //todo: BUG: color isn't showing. Currently testing preset color rather than obtained from data.
+                //todo: RUN BUG: color isn't showing. Currently testing preset color rather than obtained from data.
                 init_pair(1, COLOR_RED, COLOR_BLACK);
-                //init_pair(1, tile->tile[y][x].character->color, COLOR_BLACK);
+                //init_pair(1, Tile->Tile[y][x].character->color, COLOR_BLACK);
                 attrset(COLOR_PAIR(1));
                 mvaddch(y + 1, x, printable_character);
                 refresh();
@@ -1871,20 +1877,20 @@ int print_tile_terrain(struct tile *tile) {
 
 }
 
-int print_tile_trainer_distances(struct tile *tile) {
+int print_tile_trainer_distances(Tile *tile) {
 
     dijkstra(tile, RIVAL);
-    printf("Rival distance tile:\n");
+    printf("Rival distance Tile:\n");
     print_tile_trainer_distances_printer(tile);
     dijkstra(tile, HIKER);
-    printf("Hiker distance tile:\n");
+    printf("Hiker distance Tile:\n");
     print_tile_trainer_distances_printer(tile);
 
     return 0;
 
 }
 
-int print_tile_trainer_distances_printer(struct tile *tile) {
+int print_tile_trainer_distances_printer(Tile *tile) {
 
     for (int i = 0; i < TILE_LENGTH_Y; i++) {
         for (int j = 0; j < TILE_WIDTH_X; j++) {
