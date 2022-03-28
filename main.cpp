@@ -55,8 +55,9 @@ static Terrain path = {7, '#', 0, 5, 5, 5, COLOR_YELLOW};
 static Terrain center = {8, 'C', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA};
 static Terrain mart = {9, 'M', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA};
 
-//todo: ASSIGNED: create character abstract class and player_character and non_player_character implementations
-struct character {
+//todo: BUG: does not compile. Player Character and Non Player Character have Character stuff private.
+class Character {
+public:
     int x;
     int y;
     enum character_type type_enum;
@@ -71,6 +72,14 @@ struct character {
     int defeated;
 };
 
+class PlayerCharacter : public Character {
+
+};
+
+class NonPlayerCharacter : public Character {
+
+};
+
 class Point {
 public:
     int x;
@@ -78,7 +87,7 @@ public:
     Terrain terrain;
     //for looped non-queue plant_seeds growth
     Terrain grow_into;
-    struct character *character;
+    Character *character;
     int distance;
     heap_node_t *heap_node;
 };
@@ -92,11 +101,9 @@ public:
     int south_x;
     int east_y;
     int west_y;
-    struct character *player_character;
+    PlayerCharacter *player_character;
     struct heap *turn_heap;
 };
-
-//todo: ASSIGNED: check that there are no more uses of "struct"
 
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
 int hiker_distance_tile [TILE_LENGTH_Y][TILE_WIDTH_X];
@@ -106,7 +113,7 @@ static int32_t comparator_trainer_distance_tile(const void *key, const void *wit
 }
 
 static int32_t comparator_character_movement(const void *key, const void *with) {
-    return ((struct character *) key)->turn - ((struct character *) with)->turn;
+    return ((Character *) key)->turn - ((Character *) with)->turn;
 }
 
 int print_usage();
@@ -114,7 +121,7 @@ int initialize_terminal();
 int turn_based_movement();
 int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
-int combat(struct character *from_character, struct character *to_character);
+int combat(Character *from_character, Character *to_character);
 int enter_center();
 int enter_mart();
 int change_tile(int x, int y);
@@ -141,7 +148,7 @@ int print_tile_trainer_distances_printer(Tile *tile);
 Tile *world[WORLD_LENGTH_Y][WORLD_WIDTH_X] = {0};
 int current_tile_x;
 int current_tile_y;
-struct character *player_character;
+PlayerCharacter *player_character;
 int num_trainers;
 
 int main(int argc, char *argv[]) {
@@ -213,8 +220,8 @@ int turn_based_movement() {
 
     Tile *tile = world[current_tile_y][current_tile_x];
     struct heap *turn_heap = tile->turn_heap;
-    static struct character *character;
-    while ((character = (struct character *) (heap_remove_min(turn_heap)))) {
+    static Character *character;
+    while ((character = (Character *) (heap_remove_min(turn_heap)))) {
         if (character->type_enum == PLAYER) {
             clear();
             addstr("It's your turn! Enter a command or press z for help!\n");
@@ -540,13 +547,13 @@ int player_turn() {
             player_character->turn += MINIMUM_TURN;
             turn_completed = 1;
         } else if (input == 't') {
-            struct character *trainers [num_trainers];
+            NonPlayerCharacter *trainers [num_trainers];
             int count = 0;
             for (int i = 1; i < TILE_LENGTH_Y - 1; i++) {
                 for (int j = 1; j < TILE_WIDTH_X - 1; j++) {
-                    struct character *character = tile->tile[i][j].character;
+                    Character *character = tile->tile[i][j].character;
                     if (character != NULL && character->type_enum != PLAYER) {
-                        trainers[count] = character;
+                        trainers[count] = (NonPlayerCharacter *) character;
                         count++;
                     }
                 }
@@ -559,7 +566,7 @@ int player_turn() {
             clear();
             addstr("Trainer list: Press escape to return to the map\n");
             for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
-                struct character *trainer = trainers[i];
+                NonPlayerCharacter *trainer = trainers[i];
                 mvaddstr(screen_row, type_x, trainer->type_string);
                 mvaddstr(screen_row, position_x, " ");
                 if (trainer->y != player_character->y) {
@@ -612,7 +619,7 @@ int player_turn() {
                         clear();
                         addstr("Trainer list: Press escape to return to the map\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
-                            struct character *trainer = trainers[i];
+                            NonPlayerCharacter *trainer = trainers[i];
                             mvaddstr(screen_row, type_x, trainer->type_string);
                             mvaddstr(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
@@ -653,7 +660,7 @@ int player_turn() {
                         clear();
                         addstr("You are already at the top of the list so you cannot scroll up.\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
-                            struct character *trainer = trainers[i];
+                            NonPlayerCharacter *trainer = trainers[i];
                             mvaddstr(screen_row, type_x, trainer->type_string);
                             mvaddstr(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
@@ -697,7 +704,7 @@ int player_turn() {
                         clear();
                         addstr("Trainer list: Press escape to return to the map\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
-                            struct character *trainer = trainers[i];
+                            NonPlayerCharacter *trainer = trainers[i];
                             mvaddstr(screen_row, type_x, trainer->type_string);
                             mvaddstr(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
@@ -738,7 +745,7 @@ int player_turn() {
                         clear();
                         addstr("You are already at the bottom of the list so you cannot scroll down.\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
-                            struct character *trainer = trainers[i];
+                            NonPlayerCharacter *trainer = trainers[i];
                             mvaddstr(screen_row, type_x, trainer->type_string);
                             mvaddstr(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
@@ -781,7 +788,7 @@ int player_turn() {
                     clear();
                     addstr("That is not a valid command! Press escape to return to the map.\n");
                     for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
-                        struct character *trainer = trainers[i];
+                        NonPlayerCharacter *trainer = trainers[i];
                         mvaddstr(screen_row, type_x, trainer->type_string);
                         mvaddstr(screen_row, position_x, " ");
                         if (trainer->y != player_character->y) {
@@ -940,8 +947,8 @@ int player_turn() {
 int move_character(int x, int y, int new_x, int new_y) {
 
     Tile *tile = world[current_tile_y][current_tile_x];
-    struct character *from_character = tile->tile[y][x].character;
-    struct character *to_character = tile->tile[new_y][new_x].character;
+    Character *from_character = tile->tile[y][x].character;
+    Character *to_character = tile->tile[new_y][new_x].character;
     //if moving onto PC
     if (to_character != NULL) {
         //pc-trainer combat instigated by either party
@@ -963,7 +970,7 @@ int move_character(int x, int y, int new_x, int new_y) {
     else {
         tile->tile[y][x].character->x = new_x;
         tile->tile[y][x].character->y = new_y;
-        struct character *temp_character = tile->tile[y][x].character;
+        Character *temp_character = tile->tile[y][x].character;
         tile->tile[y][x].character = NULL;
         tile->tile[new_y][new_x].character = temp_character;
     }
@@ -971,7 +978,7 @@ int move_character(int x, int y, int new_x, int new_y) {
 
 }
 
-int combat(struct character *from_character, struct character *to_character) {
+int combat(Character *from_character, Character *to_character) {
 
     if (from_character->type_enum == PLAYER) {
         //player attacks trainer
@@ -1043,7 +1050,7 @@ int change_tile(int x, int y) {
         //todo: RUN BUG: heap insert crash: fix with 1 global heap and remove/re-add trainers (with time update) upon changing maps
         //todo: RUN BUG TEST: uncomment below once heap crash insert bug fixed
 //        if (new_tile->turn_heap->size > 0) {
-//            struct character *trainer = heap_remove_min(new_tile->turn_heap);
+//            NonPlayerCharacter *trainer = heap_remove_min(new_tile->turn_heap);
 //            while (trainer->turn < player_character->turn) {
 //                trainer->turn = player_character->turn;
 //                heap_insert(new_tile->turn_heap, trainer);
@@ -1608,7 +1615,7 @@ int place_player_character(Tile *tile) {
         }
     }
 
-    player_character = new struct character;
+    player_character = new PlayerCharacter();
     player_character->x = x;
     player_character->y = y;
     player_character->type_enum = PLAYER;
@@ -1707,7 +1714,7 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
                 }
             }
         }
-        struct character *trainer = new struct character();
+        NonPlayerCharacter *trainer = new NonPlayerCharacter();
         trainer->x = x;
         trainer->y = y;
         trainer->type_enum = trainer_type;
@@ -1855,7 +1862,7 @@ int print_tile_terrain(Tile *tile) {
                 printable_character = tile->tile[y][x].character->printable_character;
                 //todo: RUN BUG: color isn't showing. Currently testing preset color rather than obtained from data.
                 init_pair(1, COLOR_RED, COLOR_BLACK);
-                //init_pair(1, Tile->Tile[y][x].character->color, COLOR_BLACK);
+                //init_pair(1, Tile->Tile[y][x].Character->color, COLOR_BLACK);
                 attrset(COLOR_PAIR(1));
                 mvaddch(y + 1, x, printable_character);
                 refresh();
