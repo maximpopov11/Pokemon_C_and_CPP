@@ -39,21 +39,39 @@ public:
     int rival_weight;
     int hiker_weight;
     short color;
+
+    Terrain() {
+        this->id = 0;
+        this->printable_character = '_';
+        this->path_weight = 0;
+        this->pc_weight = 0;
+        this->rival_weight = 0;
+        this->hiker_weight = 0;
+        this->color = COLOR_BLACK;
+    }
+
+    Terrain(int id, char printable_character, int path_weight, int pc_weight, int rival_weight, int hiker_weight, short color) {
+        this->id = id;
+        this->printable_character = printable_character;
+        this->path_weight = path_weight;
+        this->pc_weight = pc_weight;
+        this->rival_weight = rival_weight;
+        this->hiker_weight = hiker_weight;
+        this->color = color;
+    }
 };
 
 //todo: BUG: Pyrite Crashes on next line "what():  basic_string::_M_construct null not valid". CLion crashes on initscr (ncurses) later.
-static Terrain none = {0, '_', 0, 0, 0, 0, COLOR_BLACK};
-static Terrain edge = {1, '%', INT_MAX, INT_MAX, INT_MAX, INT_MAX, COLOR_WHITE};
-static Terrain clearing =
-        {2, '.', 5, 10, 10, 5, COLOR_YELLOW};
-static Terrain grass =
-        {3, ',', 10, 15, 15, 5, COLOR_GREEN};
-static Terrain forest = {4, '^', 100, INT_MAX, INT_MAX, 10, COLOR_GREEN};
-static Terrain mountain = {5, '%', 150, INT_MAX, INT_MAX, 10, COLOR_WHITE};
-static Terrain lake = {6, '~', 200, INT_MAX, INT_MAX, INT_MAX, COLOR_BLUE};
-static Terrain path = {7, '#', 0, 5, 5, 5, COLOR_YELLOW};
-static Terrain center = {8, 'C', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA};
-static Terrain mart = {9, 'M', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA};
+static Terrain *none = new Terrain(0, '_', 0, 0, 0, 0, COLOR_BLACK);
+static Terrain *edge = new Terrain(1, '%', INT_MAX, INT_MAX, INT_MAX, INT_MAX, COLOR_WHITE);
+static Terrain *clearing = new Terrain(2, '.', 5, 10, 10, 5, COLOR_YELLOW);
+static Terrain *grass = new Terrain(3, ',', 10, 15, 15, 5, COLOR_GREEN);
+static Terrain *forest = new Terrain(4, '^', 100, INT_MAX, INT_MAX, 10, COLOR_GREEN);
+static Terrain *mountain = new Terrain(5, '%', 150, INT_MAX, INT_MAX, 10, COLOR_WHITE);
+static Terrain *lake = new Terrain(6, '~', 200, INT_MAX, INT_MAX, INT_MAX, COLOR_BLUE);
+static Terrain *path = new Terrain(7, '#', 0, 5, 5, 5, COLOR_YELLOW);
+static Terrain *center = new Terrain(8, 'C', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA);
+static Terrain *mart = new Terrain(9, 'M', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA);
 
 //todo: BUG: does not compile. Player Character and Non Player Character have Character stuff private.
 class Character {
@@ -90,6 +108,16 @@ public:
     Character *character;
     int distance;
     heap_node_t *heap_node;
+
+    Point() {
+        this->x = -1;
+        this->y = -1;
+        this->terrain = *none;
+        this->grow_into = *none;
+        this->character = NULL;
+        this->distance = INT_MAX;
+        this->heap_node = NULL;
+    }
 };
 
 class Tile {
@@ -103,6 +131,17 @@ public:
     int west_y;
     PlayerCharacter *player_character;
     struct heap *turn_heap;
+
+    Tile() {
+        this->x = -1;
+        this->y = -1;
+        this->north_x = -1;
+        this->south_x = -1;
+        this->east_y = -1;
+        this->west_y = -1;
+        this->player_character = NULL;
+        this->turn_heap = NULL;
+    }
 };
 
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
@@ -524,9 +563,9 @@ int player_turn() {
             moving = 1;
             new_x--;
         } else if (input == '>') {
-            if (tile->tile[y][x].terrain.id == center.id) {
+            if (tile->tile[y][x].terrain.id == center->id) {
                 enter_center();
-            } else if (tile->tile[y][x].terrain.id == mart.id) {
+            } else if (tile->tile[y][x].terrain.id == mart->id) {
                 enter_mart();
             } else {
                 clear();
@@ -1110,11 +1149,10 @@ Tile create_tile(int x, int y) {
 Tile create_empty_tile() {
 
     Tile tile;
-    Point empty_point =
-            {-1, -1,none, none, NULL, INT_MAX, NULL};
+    Point *empty_point = new Point();
     for (int i = 0; i < TILE_LENGTH_Y; i++) {
         for (int j = 0; j < TILE_WIDTH_X; j++) {
-            tile.tile[i][j] = empty_point;
+            tile.tile[i][j] = *empty_point;
             tile.tile[i][j].x = j;
             tile.tile[i][j].y = i;
         }
@@ -1137,11 +1175,11 @@ int generate_terrain(Tile *tile) {
     const int NUM_FOREST_SEEDS = rand() % 5;
     const int NUM_MOUNTAIN_SEEDS = rand() % 4;
     const int NUM_LAKE_SEEDS = rand() % 3;
-    plant_seeds(tile, grass, NUM_TALL_GRASS_SEEDS);
-    plant_seeds(tile, clearing, NUM_CLEARING_SEEDS);
-    plant_seeds(tile, forest, NUM_FOREST_SEEDS);
-    plant_seeds(tile, mountain, NUM_MOUNTAIN_SEEDS);
-    plant_seeds(tile, lake, NUM_LAKE_SEEDS);
+    plant_seeds(tile, *grass, NUM_TALL_GRASS_SEEDS);
+    plant_seeds(tile, *clearing, NUM_CLEARING_SEEDS);
+    plant_seeds(tile, *forest, NUM_FOREST_SEEDS);
+    plant_seeds(tile, *mountain, NUM_MOUNTAIN_SEEDS);
+    plant_seeds(tile, *lake, NUM_LAKE_SEEDS);
     grow_seeds(tile);
     place_edge(tile);
     set_terrain_border_weights(tile);
@@ -1157,7 +1195,7 @@ int plant_seeds(Tile *tile, Terrain terrain, int num_seeds) {
         while (placed == 0) {
             int x = rand() % (TILE_WIDTH_X - 2) + 1;
             int y = rand() % (TILE_LENGTH_Y - 2) + 1;
-            if (tile->tile[y][x].terrain.id == none.id) {
+            if (tile->tile[y][x].terrain.id == none->id) {
                 tile->tile[y][x].terrain = terrain;
                 placed = 1;
             }
@@ -1187,7 +1225,7 @@ int grow_seeds(Tile *tile) {
         //determine what must grow
         for (int i = 1; i < TILE_LENGTH_Y - 1; i++) {
             for (int j = 1; j < TILE_WIDTH_X - 1; j++) {
-                if (tile->tile[i][j].terrain.id == none.id) {
+                if (tile->tile[i][j].terrain.id == none->id) {
                     //loop through nearby area to copy first Terrain found
                     for (int k = -1; k <=1; k++) {
                         for (int l = -1; l <= 1; l++) {
@@ -1195,7 +1233,7 @@ int grow_seeds(Tile *tile) {
                             int y = i+l;
                             if (x > 0 && x < TILE_WIDTH_X - 1 && y > 0 && y < TILE_LENGTH_Y - 1) {
                                 Terrain new_terrain = tile->tile[y][x].terrain;
-                                if (new_terrain.id != none.id) {
+                                if (new_terrain.id != none->id) {
                                     tile->tile[i][j].grow_into = new_terrain;
                                 }
                             }
@@ -1209,7 +1247,7 @@ int grow_seeds(Tile *tile) {
         for (int i = 1; i < TILE_LENGTH_Y - 1; i++) {
             for (int j = 1; j < TILE_WIDTH_X - 1; j++) {
                 Terrain new_terrain = tile->tile[i][j].grow_into;
-                if (new_terrain.id != none.id) {
+                if (new_terrain.id != none->id) {
                     tile->tile[i][j].terrain = new_terrain;
                 }
             }
@@ -1224,12 +1262,12 @@ int place_edge(Tile *tile) {
 
     //places edge (stones with different name and higher weight) on edges
     for (int i = 0; i < TILE_WIDTH_X; i ++) {
-        tile->tile[0][i].terrain = edge;
-        tile->tile[TILE_LENGTH_Y - 1][i].terrain = edge;
+        tile->tile[0][i].terrain = *edge;
+        tile->tile[TILE_LENGTH_Y - 1][i].terrain = *edge;
     }
     for (int i = 0; i < TILE_LENGTH_Y; i ++) {
-        tile->tile[i][0].terrain = edge;
-        tile->tile[i][TILE_WIDTH_X - 1].terrain = edge;
+        tile->tile[i][0].terrain = *edge;
+        tile->tile[i][TILE_WIDTH_X - 1].terrain = *edge;
     }
 
     return 0;
@@ -1248,7 +1286,7 @@ int set_terrain_border_weights(Tile *tile) {
                     int y = i+l;
                     if (x > 0 && x < TILE_WIDTH_X - 1 && y > 0 && y < TILE_LENGTH_Y - 1) {
                         Terrain other_terrain = tile->tile[y][x].terrain;
-                        if (terrain.id != other_terrain.id && other_terrain.id != edge.id) {
+                        if (terrain.id != other_terrain.id && other_terrain.id != edge->id) {
                             tile->tile[i][j].terrain.path_weight = TERRAIN_BORDER_WEIGHT;
                         }
                     }
@@ -1281,7 +1319,7 @@ int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y)
     current_y = 0;
     last_move = 'x';
     moves_since_last_change = 0;
-    tile->tile[current_y][current_x].terrain = path;
+    tile->tile[current_y][current_x].terrain = *path;
     while (current_y < TILE_LENGTH_Y - 2) {
         //determine weights
         int east_weight = INT_MAX;
@@ -1300,7 +1338,7 @@ int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y)
         //choose the lowest weight
         if (east_weight < west_weight && east_weight < south_weight) {
             current_x++;
-            tile->tile[current_y][current_x].terrain = path;
+            tile->tile[current_y][current_x].terrain = *path;
             if (last_move == 'e') {
                 moves_since_last_change++;
             }
@@ -1311,7 +1349,7 @@ int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y)
         }
         else if (west_weight < south_weight) {
             current_x--;
-            tile->tile[current_y][current_x].terrain = path;
+            tile->tile[current_y][current_x].terrain = *path;
             if (last_move == 'w') {
                 moves_since_last_change++;
             }
@@ -1322,7 +1360,7 @@ int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y)
         }
         else {
             current_y++;
-            tile->tile[current_y][current_x].terrain = path;
+            tile->tile[current_y][current_x].terrain = *path;
             if (last_move == 's') {
                 moves_since_last_change++;
             }
@@ -1335,23 +1373,23 @@ int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y)
     if (current_x < south_x) {
         for (int i = current_x; i <= south_x; i++) {
             current_x = i;
-            tile->tile[current_y][current_x].terrain = path;
+            tile->tile[current_y][current_x].terrain = *path;
         }
     }
     else if (current_x > south_x) {
         for (int i = current_x; i >= south_x; i--) {
             current_x = i;
-            tile->tile[current_y][current_x].terrain = path;
+            tile->tile[current_y][current_x].terrain = *path;
         }
     }
-    tile->tile[current_y + 1][current_x].terrain = path;
+    tile->tile[current_y + 1][current_x].terrain = *path;
 
     //West/East path
     current_x = 0;
     current_y = west_y;
     last_move = 'x';
     moves_since_last_change = 0;
-    tile->tile[current_y][current_x].terrain = path;
+    tile->tile[current_y][current_x].terrain = *path;
     while (current_x < TILE_WIDTH_X - 2) {
         //determine weights
         int north_weight = INT_MAX;
@@ -1370,7 +1408,7 @@ int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y)
         //choose the lowest weight
         if (north_weight < south_weight && north_weight < east_weight) {
             current_y--;
-            tile->tile[current_y][current_x].terrain = path;
+            tile->tile[current_y][current_x].terrain = *path;
             if (last_move == 'n') {
                 moves_since_last_change++;
             }
@@ -1381,7 +1419,7 @@ int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y)
         }
         else if (south_weight < east_weight) {
             current_y++;
-            tile->tile[current_y][current_x].terrain = path;
+            tile->tile[current_y][current_x].terrain = *path;
             if (last_move == 's') {
                 moves_since_last_change++;
             }
@@ -1392,7 +1430,7 @@ int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y)
         }
         else {
             current_x++;
-            tile->tile[current_y][current_x].terrain = path;
+            tile->tile[current_y][current_x].terrain = *path;
             if (last_move == 'e') {
                 moves_since_last_change++;
             }
@@ -1405,16 +1443,16 @@ int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y)
     if (current_y < east_y) {
         for (int i = current_y; i <= east_y; i++) {
             current_y = i;
-            tile->tile[current_y][current_x].terrain = path;
+            tile->tile[current_y][current_x].terrain = *path;
         }
     }
     else if (current_y > east_y) {
         for (int i = current_y; i >= east_y; i--) {
             current_y = i;
-            tile->tile[current_y][current_x].terrain = path;
+            tile->tile[current_y][current_x].terrain = *path;
         }
     }
-    tile->tile[current_y][current_x + 1].terrain = path;
+    tile->tile[current_y][current_x + 1].terrain = *path;
 
     tile->north_x = north_x;
     tile->south_x = south_x;
@@ -1567,8 +1605,8 @@ int generate_buildings(Tile *tile, int x, int y) {
             chance = 5;
         }
     }
-    place_building(tile, center, chance);
-    place_building(tile, mart, chance);
+    place_building(tile, *center, chance);
+    place_building(tile, *mart, chance);
 
     return 0;
 
@@ -1585,10 +1623,10 @@ int place_building(Tile *tile, Terrain terrain, double chance) {
             y = rand() % (TILE_LENGTH_Y - 2) + 1;
             Point point = tile->tile[y][x];
             if (!legal_overwrite(point)) {
-                if ((x > 0 && tile->tile[y][x - 1].terrain.id == path.id)
-                    || (x < TILE_WIDTH_X - 1 && tile->tile[y][x + 1].terrain.id == path.id)
-                    || (y > 0 && tile->tile[y - 1][x].terrain.id == path.id)
-                    || (y < TILE_LENGTH_Y - 1 && tile->tile[y + 1][x].terrain.id == path.id)) {
+                if ((x > 0 && tile->tile[y][x - 1].terrain.id == path->id)
+                    || (x < TILE_WIDTH_X - 1 && tile->tile[y][x + 1].terrain.id == path->id)
+                    || (y > 0 && tile->tile[y - 1][x].terrain.id == path->id)
+                    || (y < TILE_LENGTH_Y - 1 && tile->tile[y + 1][x].terrain.id == path->id)) {
                     valid = 0;
                 }
             }
@@ -1610,7 +1648,7 @@ int place_player_character(Tile *tile) {
     while (found == 0) {
         x = rand() % 78 + 1;
         y = rand() % 19 + 1;
-        if (tile->tile[y][x].terrain.id == path.id) {
+        if (tile->tile[y][x].terrain.id == path->id) {
             found = 1;
         }
     }
@@ -1833,10 +1871,10 @@ int dijkstra(Tile *tile, enum character_type trainer_type) {
 
 int legal_overwrite(Point point) {
 
-    if (point.terrain.id == edge.id
-        || point.terrain.id == path.id
-        || point.terrain.id == center.id
-        || point.terrain.id == mart.id) {
+    if (point.terrain.id == edge->id
+        || point.terrain.id == path->id
+        || point.terrain.id == center->id
+        || point.terrain.id == mart->id) {
         return 1;
     }
     else {
