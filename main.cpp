@@ -61,7 +61,6 @@ public:
     }
 };
 
-//todo: BUG: Pyrite Crashes on next line "what():  basic_string::_M_construct null not valid". CLion crashes on initscr (ncurses) later.
 static Terrain *none = new Terrain(0, '_', 0, 0, 0, 0, COLOR_BLACK);
 static Terrain *edge = new Terrain(1, '%', INT_MAX, INT_MAX, INT_MAX, INT_MAX, COLOR_WHITE);
 static Terrain *clearing = new Terrain(2, '.', 5, 10, 10, 5, COLOR_YELLOW);
@@ -73,13 +72,12 @@ static Terrain *path = new Terrain(7, '#', 0, 5, 5, 5, COLOR_YELLOW);
 static Terrain *center = new Terrain(8, 'C', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA);
 static Terrain *mart = new Terrain(9, 'M', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA);
 
-//todo: BUG: does not compile. Player Character and Non Player Character have Character stuff private.
 class Character {
 public:
     int x;
     int y;
     enum character_type type_enum;
-    char *type_string;
+    std::string type_string;
     char printable_character;
     short color;
     int turn;
@@ -606,7 +604,7 @@ int player_turn() {
             addstr("Trainer list: Press escape to return to the map\n");
             for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                 NonPlayerCharacter *trainer = trainers[i];
-                mvaddstr(screen_row, type_x, trainer->type_string);
+                mvaddstr(screen_row, type_x, trainer->type_string.c_str());
                 mvaddstr(screen_row, position_x, " ");
                 if (trainer->y != player_character->y) {
                     char y_distance[3];
@@ -659,7 +657,7 @@ int player_turn() {
                         addstr("Trainer list: Press escape to return to the map\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                             NonPlayerCharacter *trainer = trainers[i];
-                            mvaddstr(screen_row, type_x, trainer->type_string);
+                            mvaddstr(screen_row, type_x, trainer->type_string.c_str());
                             mvaddstr(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
                                 char y_distance[3];
@@ -700,7 +698,7 @@ int player_turn() {
                         addstr("You are already at the top of the list so you cannot scroll up.\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                             NonPlayerCharacter *trainer = trainers[i];
-                            mvaddstr(screen_row, type_x, trainer->type_string);
+                            mvaddstr(screen_row, type_x, trainer->type_string.c_str());
                             mvaddstr(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
                                 char y_distance[3];
@@ -744,7 +742,7 @@ int player_turn() {
                         addstr("Trainer list: Press escape to return to the map\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                             NonPlayerCharacter *trainer = trainers[i];
-                            mvaddstr(screen_row, type_x, trainer->type_string);
+                            mvaddstr(screen_row, type_x, trainer->type_string.c_str());
                             mvaddstr(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
                                 char y_distance[3];
@@ -785,7 +783,7 @@ int player_turn() {
                         addstr("You are already at the bottom of the list so you cannot scroll down.\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                             NonPlayerCharacter *trainer = trainers[i];
-                            mvaddstr(screen_row, type_x, trainer->type_string);
+                            mvaddstr(screen_row, type_x, trainer->type_string.c_str());
                             mvaddstr(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
                                 char y_distance[3];
@@ -828,7 +826,7 @@ int player_turn() {
                     addstr("That is not a valid command! Press escape to return to the map.\n");
                     for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                         NonPlayerCharacter *trainer = trainers[i];
-                        mvaddstr(screen_row, type_x, trainer->type_string);
+                        mvaddstr(screen_row, type_x, trainer->type_string.c_str());
                         mvaddstr(screen_row, position_x, " ");
                         if (trainer->y != player_character->y) {
                             char y_distance[3];
