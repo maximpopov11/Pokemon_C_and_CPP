@@ -40,25 +40,11 @@ public:
     int hiker_weight;
     short color;
 
-    Terrain() {
-        this->id = 0;
-        this->printable_character = '_';
-        this->path_weight = 0;
-        this->pc_weight = 0;
-        this->rival_weight = 0;
-        this->hiker_weight = 0;
-        this->color = COLOR_BLACK;
-    }
+    Terrain() : Terrain(0, '_', 0, 0, 0, 0, COLOR_BLACK) {}
 
-    Terrain(int id, char printable_character, int path_weight, int pc_weight, int rival_weight, int hiker_weight, short color) {
-        this->id = id;
-        this->printable_character = printable_character;
-        this->path_weight = path_weight;
-        this->pc_weight = pc_weight;
-        this->rival_weight = rival_weight;
-        this->hiker_weight = hiker_weight;
-        this->color = color;
-    }
+    Terrain(int id, char printable_character, int path_weight, int pc_weight, int rival_weight, int hiker_weight, short color) :
+        id(id), printable_character(printable_character), path_weight(path_weight), pc_weight(pc_weight),
+        rival_weight(rival_weight), hiker_weight(hiker_weight), color(color) {}
 };
 
 static Terrain *none = new Terrain(0, '_', 0, 0, 0, 0, COLOR_BLACK);
@@ -86,6 +72,12 @@ public:
     int y_direction;
     int in_building;
     int defeated;
+
+    Character(int x, int y, enum  character_type type_enum, std::string type_string, char printable_character, short color,
+            int turn, int direction_set, int x_direction, int y_direction, int in_building, int defeated) : x(x), y(y),
+            type_enum(type_enum), type_string(type_string), printable_character(printable_character), color(color),
+            turn(turn), direction_set(direction_set), x_direction(x_direction), y_direction(y_direction),
+            in_building(in_building), defeated(defeated) {}
 };
 
 class PlayerCharacter : public Character {
@@ -185,7 +177,7 @@ int print_tile_trainer_distances_printer(Tile *tile);
 Tile *world[WORLD_LENGTH_Y][WORLD_WIDTH_X] = {0};
 int current_tile_x;
 int current_tile_y;
-PlayerCharacter *player_character;
+Character *player_character;
 int num_trainers;
 
 int main(int argc, char *argv[]) {
@@ -1080,7 +1072,7 @@ int change_tile(int x, int y) {
         current_tile_x = x;
         current_tile_y = y;
         Tile *new_tile = world[current_tile_y][current_tile_x];
-        new_tile->player_character = player_character;
+        new_tile->player_character = (PlayerCharacter *) player_character;
         //set all characters in heap to same turn value as PC
         //todo: RUN BUG: moving between tiles sometimes crashes
         //todo: RUN BUG: upon re-entering ORIGINAL map (but not other maps) post leaving it, trainers never move
@@ -1651,19 +1643,10 @@ int place_player_character(Tile *tile) {
         }
     }
 
-    player_character = new PlayerCharacter();
-    player_character->x = x;
-    player_character->y = y;
-    player_character->type_enum = PLAYER;
-    std::string (player_character->type_string) = "PLAYER";
-    player_character->printable_character = '@';
-    player_character->color = COLOR_CYAN;
-    player_character->turn = 0;
-    player_character->direction_set = 0;
-    player_character->in_building = 0;
-    player_character->defeated = 0;
+    player_character = new Character(x, y, PLAYER, "PLAYER", '@', COLOR_CYAN,
+                                     0, 0, 0, 0, 0, 0);
     heap_insert(turn_heap, player_character);
-    tile->player_character = player_character;
+    tile->player_character = (PlayerCharacter *) player_character;
     tile->tile[y][x].character = player_character;
     //create distance tiles
     dijkstra(tile, RIVAL);
@@ -1750,39 +1733,34 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
                 }
             }
         }
-        NonPlayerCharacter *trainer = new NonPlayerCharacter();
-        trainer->x = x;
-        trainer->y = y;
-        trainer->type_enum = trainer_type;
+        std::string type_string;
         //initialize type_string
-        if (trainer->type_enum == RIVAL) {
-            std::string (trainer->type_string) = "RIVAL";
+        if (trainer_type == RIVAL) {
+            type_string = "RIVAL";
         }
-        else if (trainer->type_enum == HIKER) {
-            std::string (trainer->type_string) = "HIKER";
+        else if (trainer_type == HIKER) {
+            type_string = "HIKER";
         }
-        else if (trainer->type_enum == RANDOM_WALKER) {
-            std::string (trainer->type_string) = "RANDOM WALKER";
+        else if (trainer_type == RANDOM_WALKER) {
+            type_string = "RANDOM WALKER";
         }
-        else if (trainer->type_enum == PACER) {
-            std::string (trainer->type_string) = "PACER";
+        else if (trainer_type == PACER) {
+            type_string = "PACER";
         }
-        else if (trainer->type_enum == WANDERER) {
-            std::string (trainer->type_string) = "WANDERER";
+        else if (trainer_type == WANDERER) {
+            type_string = "WANDERER";
         }
-        else if (trainer->type_enum == STATIONARY) {
-            std::string (trainer->type_string) = "STATIONARY";
+        else if (trainer_type == STATIONARY) {
+            type_string = "STATIONARY";
         }
         else {
             //trainer is not one of the trainer types
             return 1;
         }
-        trainer->printable_character = character;
-        trainer->color = COLOR_RED;
-        trainer->turn = 0;
-        trainer->direction_set = 0;
-        trainer->in_building = 0;
-        trainer->defeated = 0;
+        Character *trainer = new Character(x, y, trainer_type, type_string, character,
+                                           COLOR_RED, 0, 0, 0, 0,
+                                           0, 0);
+        //todo: CRASH: Segmentation fault. Maybe giving pointer/non pointer when should give the other? This is the first heap insert.
         heap_insert(turn_heap, trainer);
         tile->tile[y][x].character = trainer;
         num_trainer--;
