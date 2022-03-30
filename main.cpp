@@ -6,6 +6,7 @@
 #include <ncurses.h>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include "heap.h"
 
 #define SCREEN_HEIGHT 24
@@ -227,6 +228,13 @@ int main(int argc, char *argv[]) {
     }
     else {
         std::cout << "Input file name: " << fileName << " is not a valid file" << "\n";
+    }
+    std::ifstream file;
+    file.open("/pokedex/pokedex/data/csv/pokemon.csv");
+    std::string name;
+    int id, species_id, height, weight, base_experience, order, is_default;
+    while (file >> id >> name >> species_id >> height >> weight >> base_experience >> order >> is_default) {
+        std::cout << name << "\n";
     }
 
 
