@@ -5,6 +5,7 @@
 #include <getopt.h>
 #include <ncurses.h>
 #include <string>
+#include <iostream>
 #include "heap.h"
 
 #define SCREEN_HEIGHT 24
@@ -87,6 +88,8 @@ class PlayerCharacter : public Character {
 class NonPlayerCharacter : public Character {
 
 };
+
+//todo: ASSIGNED: constructor for point and tile
 
 class Point {
 public:
@@ -183,44 +186,72 @@ int num_trainers;
 int main(int argc, char *argv[]) {
 
     //get arguments
-    int opt = 0;
-    int numtrainers = 10;
-    static struct option long_options[] = {
-            {"numtrainers", required_argument,0,'t' },
-            {0,0,0,0   }
-    };
-    int long_index =0;
-    while ((opt = getopt_long(argc, argv,"t:", long_options, &long_index )) != -1) {
-        switch (opt) {
-            case 't' : numtrainers = atoi(optarg);
-                break;
-            default: print_usage();
-                exit(EXIT_FAILURE);
-        }
+//    int opt = 0;
+//    int numtrainers = 10;
+//    static struct option long_options[] = {
+//            {"numtrainers", required_argument,0,'t' },
+//            {0,0,0,0   }
+//    };
+//    int long_index =0;
+//    while ((opt = getopt_long(argc, argv,"t:", long_options, &long_index )) != -1) {
+//        switch (opt) {
+//            case 't' : numtrainers = atoi(optarg);
+//                break;
+//            default: print_usage();
+//                exit(EXIT_FAILURE);
+//        }
+//    }
+
+    //todo: ASSIGNED: test file information saved in class
+        //todo: ASSIGNED: if not find file (search priority as specified in assignment)
+        //todo: ASSIGNED: save file contents in class
+    //todo: ASSIGNED: print file contents from class
+    std::string fileName = argv[1];
+    if (fileName == "pokemon") {
+        std::cout << "pokemon" << "\n";
     }
+    else if (fileName == "moves") {
+        std::cout << "moves" << "\n";
+    }
+    else if (fileName == "pokemon_moves") {
+        std::cout << "pokemon_moves" << "\n";
+    }
+    else if (fileName == "pokemon_species") {
+        std::cout << "pokemon_species" << "\n";
+    }
+    else if (fileName == "experience") {
+        std::cout << "experience" << "\n";
+    }
+    else if (fileName == "type_names") {
+        std::cout << "type_names" << "\n";
+    }
+    else {
+        std::cout << "Input file name: " << fileName << " is not a valid file" << "\n";
+    }
+
 
     //check argument legality
-    if (numtrainers < 0) {
-        numtrainers = 0;
-    }
-    else if (numtrainers > MAX_NUM_TRAINERS) {
-        numtrainers = MAX_NUM_TRAINERS;
-    }
-    num_trainers = numtrainers;
+//    if (numtrainers < 0) {
+//        numtrainers = 0;
+//    }
+//    else if (numtrainers > MAX_NUM_TRAINERS) {
+//        numtrainers = MAX_NUM_TRAINERS;
+//    }
+//    num_trainers = numtrainers;
 
     //run program
-    srand(time(NULL));
-    initialize_terminal();
-    Tile home_tile = create_tile(WORLD_CENTER_X, WORLD_CENTER_Y);
-    current_tile_x = WORLD_CENTER_X;
-    current_tile_y = WORLD_CENTER_Y;
-    world[WORLD_CENTER_Y][WORLD_CENTER_X] = &home_tile;
-    place_player_character(world[current_tile_y][current_tile_x]);
-    while (turn_based_movement() == -1) {
-        //-1 signals map was changed: call turn_based_movement for new map/turn heap
-        //old and new Tile and heap have been updated correctly in change Tile (removed from old heap in turn_based_movement)
-    }
-    endwin();
+//    srand(time(NULL));
+//    initialize_terminal();
+//    Tile home_tile = create_tile(WORLD_CENTER_X, WORLD_CENTER_Y);
+//    current_tile_x = WORLD_CENTER_X;
+//    current_tile_y = WORLD_CENTER_Y;
+//    world[WORLD_CENTER_Y][WORLD_CENTER_X] = &home_tile;
+//    place_player_character(world[current_tile_y][current_tile_x]);
+//    while (turn_based_movement() == -1) {
+//        //-1 signals map was changed: call turn_based_movement for new map/turn heap
+//        //old and new Tile and heap have been updated correctly in change Tile (removed from old heap in turn_based_movement)
+//    }
+//    endwin();
     return 0;
 
 }
