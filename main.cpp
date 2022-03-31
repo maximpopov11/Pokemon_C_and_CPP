@@ -139,6 +139,14 @@ public:
     }
 };
 
+//commented due to failing make
+//class DatabaseInfo {
+//public:
+//    virtual std::string toString();
+//};
+
+//commented due to DatabaseInfo failing to make
+//class Pokemon : public DatabaseInfo {
 class Pokemon {
 public:
     int id;
@@ -149,10 +157,19 @@ public:
     int base_experience;
     int order;
     int is_default;
+    std::string pokemonString;
 
-    Pokemon(int id, std::string name, int species_id, int height, int weight, int base_experience, int order, int is_default) :
-        id(id), name(name), species_id(species_id), height(height), weight(weight), base_experience(base_experience),
-        order(order), is_default(is_default) {}
+    Pokemon(std::string id, std::string name, std::string species_id, std::string height, std::string weight,
+            std::string base_experience, std::string order, std::string is_default) :
+        id(stoi(id)), name(name), species_id(stoi(species_id)), height(stoi(height)), weight(stoi(weight)),
+        base_experience(stoi(base_experience)), order(stoi(order)), is_default(stoi(is_default)) {
+        pokemonString = id + " " + name + " " + species_id + " " + height + " " + weight + " " + base_experience + " " +
+                order + " " + is_default;
+    }
+
+    std::string toString() {
+        return pokemonString;
+    }
 };
 
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
@@ -168,7 +185,9 @@ static int32_t comparator_character_movement(const void *key, const void *with) 
 
 int print_usage();
 int storePokemon();
-int printPokemon();
+int storeMoves();
+//commented due to database info failing to make
+//int printData(std::vector<DatabaseInfo *> dataVector);
 int initialize_terminal();
 int turn_based_movement();
 int player_turn();
@@ -235,8 +254,9 @@ int main(int argc, char *argv[]) {
     }
     std::string fileName = argv[1];
     if (fileName == "pokemon") {
-        std::cout << "Opening pokemon.csv..." << "\n";
-        printPokemon();
+        for (int i = 0; i < (int)allPokemon.size(); i++) {
+            std::cout << allPokemon[i]->toString() << "\n";
+        }
     }
     else if (fileName == "moves") {
         std::cout << "Opening moves.csv..." << "\n";
@@ -309,8 +329,7 @@ int storePokemon() {
             getline(file, base_experience, ',');
             getline(file, order, ',');
             getline(file, is_default, '\n');
-            Pokemon *pokemon = new Pokemon(stoi(id), name, stoi(species_id), stoi(height), stoi(weight), stoi(base_experience)
-                    , stoi(order), stoi(is_default));
+            Pokemon *pokemon = new Pokemon(id, name, species_id, height, weight, base_experience, order, is_default);
             allPokemon.push_back(pokemon);
         }
     }
@@ -323,18 +342,23 @@ int storePokemon() {
 
 }
 
-int printPokemon() {
-
-    for (int i = 0; i < (int)allPokemon.size(); i++) {
-        Pokemon *testPokemon = allPokemon[i];
-        std::cout << testPokemon->id << " " << testPokemon->name << " " << testPokemon->species_id << " " << testPokemon->height
-            << " " << testPokemon->weight << " " << testPokemon->base_experience << " " << testPokemon->order << " "
-            << testPokemon->is_default << "\n";
-    }
+int storeMoves() {
 
     return 0;
 
 }
+
+//Commented due to DatabaseInfo failing to make
+//Print any data type to follow DRY principle
+//int printData(std::vector<DatabaseInfo *> dataVector) {
+//
+//    for (int i = 0; i < (int)allPokemon.size(); i++) {
+//        std::cout << dataVector[i]->toString() << "\n";
+//    }
+//
+//    return 0;
+//
+//}
 
 int initialize_terminal() {
 
