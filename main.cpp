@@ -167,6 +167,8 @@ static int32_t comparator_character_movement(const void *key, const void *with) 
 }
 
 int print_usage();
+int storePokemon();
+int printPokemon();
 int initialize_terminal();
 int turn_based_movement();
 int player_turn();
@@ -195,6 +197,7 @@ int print_tile_terrain(Tile *tile);
 int print_tile_trainer_distances(Tile *tile);
 int print_tile_trainer_distances_printer(Tile *tile);
 
+std::vector<Pokemon *> allPokemon;
 Tile *world[WORLD_LENGTH_Y][WORLD_WIDTH_X] = {0};
 int current_tile_x;
 int current_tile_y;
@@ -220,64 +223,39 @@ int main(int argc, char *argv[]) {
 //        }
 //    }
 
-    //todo: ASSIGNED: test file information saved in class
-        //todo: ASSIGNED: if not find file (search priority as specified in assignment)
-        //todo: ASSIGNED: save file contents in class
-    //todo: ASSIGNED: print file contents from class
+    //save database information into classes
+    if (storePokemon() != 0) {
+        std::cout << "File not opened successfully. File: pokemon.csv" << "\n";
+    }
+
+    //todo: ASSIGNED: store and print all files like Pokemon
     if (argc < 2) {
         std::cout << "No arguments provided." << "\n";
         return 1;
     }
     std::string fileName = argv[1];
     if (fileName == "pokemon") {
-        std::cout << "pokemon" << "\n";
+        std::cout << "Opening pokemon.csv..." << "\n";
+        printPokemon();
     }
     else if (fileName == "moves") {
-        std::cout << "moves" << "\n";
+        std::cout << "Opening moves.csv..." << "\n";
     }
     else if (fileName == "pokemon_moves") {
-        std::cout << "pokemon_moves" << "\n";
+        std::cout << "Opening pokemon_moves.csv..." << "\n";
     }
     else if (fileName == "pokemon_species") {
-        std::cout << "pokemon_species" << "\n";
+        std::cout << "Opening pokemon_species.csv..." << "\n";
     }
     else if (fileName == "experience") {
-        std::cout << "experience" << "\n";
+        std::cout << "Opening experience.csv..." << "\n";
     }
     else if (fileName == "type_names") {
-        std::cout << "type_names" << "\n";
+        std::cout << "Opening type_names.csv..." << "\n";
     }
     else {
         std::cout << "Input file name: " << fileName << " is not a valid file" << "\n";
-    }
-    std::vector<Pokemon *> allPokemon;
-    std::ifstream file;
-    file.open("pokedex/pokedex/data/csv/pokemon.csv");
-    if (file.is_open()) {
-        std:: string id, name, species_id, height, weight, base_experience, order, is_default;
-        getline(file, id, '\n');
-        while(getline(file, id, ',')) {
-            getline(file, name, ',');
-            getline(file, species_id, ',');
-            getline(file, height, ',');
-            getline(file, weight, ',');
-            getline(file, base_experience, ',');
-            getline(file, order, ',');
-            getline(file, is_default, '\n');
-            Pokemon *pokemon = new Pokemon(stoi(id), name, stoi(species_id), stoi(height), stoi(weight), stoi(base_experience)
-              , stoi(order), stoi(is_default));
-            allPokemon.push_back(pokemon);
-        }
-    }
-    else {
-        std::cout << "File not opened successfully. File: " << fileName << "\n";
         return 2;
-    }
-    for (int i = 0; i < (int)allPokemon.size(); i++) {
-        Pokemon *testPokemon = allPokemon[i];
-        std::cout << testPokemon->id << " " << testPokemon->name << " " << testPokemon->species_id << " " << testPokemon->height
-                  << " " << testPokemon->weight << " " << testPokemon->base_experience << " " << testPokemon->order << " "
-                  << testPokemon->is_default << "\n";
     }
 
 
@@ -310,6 +288,49 @@ int main(int argc, char *argv[]) {
 int print_usage() {
 
     //print expected inputs
+
+    return 0;
+
+}
+
+int storePokemon() {
+
+    std::string fileName = "pokemon";
+    std::ifstream file;
+    file.open("pokedex/pokedex/data/csv/pokemon.csv");
+    if (file.is_open()) {
+        std:: string id, name, species_id, height, weight, base_experience, order, is_default;
+        getline(file, id, '\n');
+        while(getline(file, id, ',')) {
+            getline(file, name, ',');
+            getline(file, species_id, ',');
+            getline(file, height, ',');
+            getline(file, weight, ',');
+            getline(file, base_experience, ',');
+            getline(file, order, ',');
+            getline(file, is_default, '\n');
+            Pokemon *pokemon = new Pokemon(stoi(id), name, stoi(species_id), stoi(height), stoi(weight), stoi(base_experience)
+                    , stoi(order), stoi(is_default));
+            allPokemon.push_back(pokemon);
+        }
+    }
+    else {
+        //file not opened successfully
+        return 1;
+    }
+
+    return 0;
+
+}
+
+int printPokemon() {
+
+    for (int i = 0; i < (int)allPokemon.size(); i++) {
+        Pokemon *testPokemon = allPokemon[i];
+        std::cout << testPokemon->id << " " << testPokemon->name << " " << testPokemon->species_id << " " << testPokemon->height
+            << " " << testPokemon->weight << " " << testPokemon->base_experience << " " << testPokemon->order << " "
+            << testPokemon->is_default << "\n";
+    }
 
     return 0;
 
