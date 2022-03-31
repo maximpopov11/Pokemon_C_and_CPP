@@ -207,6 +207,10 @@ int main(int argc, char *argv[]) {
         //todo: ASSIGNED: if not find file (search priority as specified in assignment)
         //todo: ASSIGNED: save file contents in class
     //todo: ASSIGNED: print file contents from class
+    if (argc < 2) {
+        std::cout << "No arguments provided." << "\n";
+        return 1;
+    }
     std::string fileName = argv[1];
     if (fileName == "pokemon") {
         std::cout << "pokemon" << "\n";
@@ -230,11 +234,43 @@ int main(int argc, char *argv[]) {
         std::cout << "Input file name: " << fileName << " is not a valid file" << "\n";
     }
     std::ifstream file;
-    file.open("/pokedex/pokedex/data/csv/pokemon.csv");
-    std::string name;
-    int id, species_id, height, weight, base_experience, order, is_default;
-    while (file >> id >> name >> species_id >> height >> weight >> base_experience >> order >> is_default) {
-        std::cout << name << "\n";
+    file.open("pokedex/pokedex/data/csv/pokemon.csv");
+    if (file.is_open()) {
+        //todo: BUG TEST: uncomment below if other solution fails
+//        std::string name;
+//        //todo: BUG: nothing is printed, but there is no crash either
+//        int id, species_id, height, weight, base_experience, order, is_default;
+//        char comma;
+//        while ((file >> comma >> id >> comma >> name >> comma >> species_id >> comma >> height >> comma >> weight >> comma
+//        >> base_experience >> comma >> order >> comma >> is_default) && (comma == 'c')) {
+//            std::cout << "test" << "\n";
+//            std::cout << name << "\n";
+//        }
+
+        std:: string id, name, species_id, height, weight, base_experience, order, is_default;
+        getline(file, id, '\n');
+        while(getline(file, id, ',')) {
+            std::cout << id << " " ;
+            getline(file, name, ',');
+            std::cout << name << " " ;
+            getline(file, species_id, ',');
+            std::cout << species_id << " " ;
+            getline(file, height, ',');
+            std::cout << height << " " ;
+            getline(file, weight, ',');
+            std::cout << weight << " " ;
+            getline(file, base_experience, ',');
+            std::cout << base_experience << " " ;
+            getline(file, order, ',');
+            std::cout << order << " " ;
+            getline(file, is_default, '\n');
+            std::cout << is_default << "\n" ;
+        }
+
+    }
+    else {
+        std::cout << "File not opened successfully. File: " << fileName << "\n";
+        return 2;
     }
 
 
