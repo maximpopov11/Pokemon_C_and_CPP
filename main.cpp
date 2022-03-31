@@ -163,8 +163,8 @@ public:
             std::string base_experience, std::string order, std::string is_default) :
         id(stoi(id)), name(name), species_id(stoi(species_id)), height(stoi(height)), weight(stoi(weight)),
         base_experience(stoi(base_experience)), order(stoi(order)), is_default(stoi(is_default)) {
-        pokemonString = id + " " + name + " " + species_id + " " + height + " " + weight + " " + base_experience + " " +
-                order + " " + is_default;
+        pokemonString = id + "," + name + "," + species_id + "," + height + "," + weight + "," + base_experience + "," +
+                order + "," + is_default;
     }
 
     std::string toString() {
@@ -210,9 +210,66 @@ public:
         this->contest_type_id = stoi(contest_type_id);
         this->contest_effect_id = stoi(contest_effect_id);
         this->super_contest_effect_id = stoi(super_contest_effect_id);
-        moveString = id + " " + name + " " + generation_id + " " + type_id + " " + power + " " + pp + " " + accuracy + " " +
-            priority + " " + target_id + " " + damage_class_id + " " + effect_id + " " + effect_chance + " " + contest_type_id +
-            " " + contest_effect_id + " " + super_contest_effect_id;
+        moveString = "";
+        if (this->id != -1) {
+            moveString += id;
+        }
+        moveString += ",";
+        if (this->name != "-1") {
+            moveString += name;
+        }
+        moveString += ",";
+        if (this->generation_id != -1) {
+            moveString += generation_id;
+        }
+        moveString += ",";
+        if (this->type_id != -1) {
+            moveString += type_id;
+        }
+        moveString += ",";
+        if (this->power != -1) {
+            moveString += power;
+        }
+        moveString += ",";
+        if (this->pp != -1) {
+            moveString += pp;
+        }
+        moveString += ",";
+        if (this->accuracy != -1) {
+            moveString += accuracy;
+        }
+        moveString += ",";
+        if (this->priority != -1) {
+            moveString += priority;
+        }
+        moveString += ",";
+        if (this->target_id != -1) {
+            moveString += target_id;
+        }
+        moveString += ",";
+        if (this->damage_class_id != -1) {
+            moveString += damage_class_id;
+        }
+        moveString += ",";
+        if (this->effect_id != -1) {
+            moveString += effect_id;
+        }
+        moveString += ",";
+        if (this->effect_chance != -1) {
+            moveString += effect_chance;
+        }
+        moveString += ",";
+        if (this->contest_type_id != -1) {
+            moveString += contest_type_id;
+        }
+        moveString += ",";
+        if (this->contest_effect_id != -1) {
+            moveString += contest_effect_id;
+        }
+        moveString += ",";
+        if (this->super_contest_effect_id != -1) {
+            moveString += super_contest_effect_id;
+        }
     }
 
     std::string toString() {
@@ -301,6 +358,7 @@ int main(int argc, char *argv[]) {
 
     //todo: ASSIGNED: store and print all files like Pokemon
     //todo: ASSIGNED: don't print -1 empty placeholder
+    //todo: ASSIGNED: read from other places first
     if (argc < 2) {
         std::cout << "No arguments provided." << "\n";
         return 1;
