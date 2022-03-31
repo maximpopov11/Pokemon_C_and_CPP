@@ -172,6 +172,54 @@ public:
     }
 };
 
+class Move {
+public:
+    int id;
+    std::string name;
+    int generation_id;
+    int type_id;
+    int power;
+    int pp;
+    int accuracy;
+    int priority;
+    int target_id;
+    int damage_class_id;
+    int effect_id;
+    int effect_chance;
+    int contest_type_id;
+    int contest_effect_id;
+    int super_contest_effect_id;
+    std::string moveString;
+
+    Move(std::string id, std::string name, std::string generation_id, std::string type_id, std::string power,
+    std::string pp, std::string accuracy, std::string priority, std::string target_id, std::string damage_class_id,
+         std::string effect_id, std::string effect_chance, std::string contest_type_id, std::string contest_effect_id,
+         std::string super_contest_effect_id) {
+        this->id = stoi(id);
+        this->name = name;
+        this->generation_id = stoi(generation_id);
+        this->type_id = stoi(type_id);
+        this->power = stoi(power);
+        this->pp = stoi(pp);
+        this->accuracy = stoi(accuracy);
+        this->priority = stoi(priority);
+        this->target_id = stoi(target_id);
+        this->damage_class_id = stoi(damage_class_id);
+        this->effect_id = stoi(effect_id);
+        this->effect_chance = stoi(effect_chance);
+        this->contest_type_id = stoi(contest_type_id);
+        this->contest_effect_id = stoi(contest_effect_id);
+        this->super_contest_effect_id = stoi(super_contest_effect_id);
+        moveString = id + " " + name + " " + generation_id + " " + type_id + " " + power + " " + pp + " " + accuracy + " " +
+            priority + " " + target_id + " " + damage_class_id + " " + effect_id + " " + effect_chance + " " + contest_type_id +
+            " " + contest_effect_id + " " + super_contest_effect_id;
+    }
+
+    std::string toString() {
+        return moveString;
+    }
+};
+
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
 int hiker_distance_tile [TILE_LENGTH_Y][TILE_WIDTH_X];
 
@@ -217,6 +265,7 @@ int print_tile_trainer_distances(Tile *tile);
 int print_tile_trainer_distances_printer(Tile *tile);
 
 std::vector<Pokemon *> allPokemon;
+std::vector<Move *> allMoves;
 Tile *world[WORLD_LENGTH_Y][WORLD_WIDTH_X] = {0};
 int current_tile_x;
 int current_tile_y;
@@ -246,8 +295,12 @@ int main(int argc, char *argv[]) {
     if (storePokemon() != 0) {
         std::cout << "File not opened successfully. File: pokemon.csv" << "\n";
     }
+    if (storeMoves() != 0) {
+        std::cout << "File not opened successfully. File: moves.csv" << "\n";
+    }
 
     //todo: ASSIGNED: store and print all files like Pokemon
+    //todo: ASSIGNED: don't print -1 empty placeholder
     if (argc < 2) {
         std::cout << "No arguments provided." << "\n";
         return 1;
@@ -259,7 +312,9 @@ int main(int argc, char *argv[]) {
         }
     }
     else if (fileName == "moves") {
-        std::cout << "Opening moves.csv..." << "\n";
+        for (int i = 0; i < (int)allMoves.size(); i++) {
+            std::cout << allMoves[i]->toString() << "\n";
+        }
     }
     else if (fileName == "pokemon_moves") {
         std::cout << "Opening pokemon_moves.csv..." << "\n";
@@ -315,7 +370,6 @@ int print_usage() {
 
 int storePokemon() {
 
-    std::string fileName = "pokemon";
     std::ifstream file;
     file.open("pokedex/pokedex/data/csv/pokemon.csv");
     if (file.is_open()) {
@@ -329,6 +383,30 @@ int storePokemon() {
             getline(file, base_experience, ',');
             getline(file, order, ',');
             getline(file, is_default, '\n');
+            if (id == "") {
+                id = "-1";
+            }
+            if (name == "") {
+                name = "-1";
+            }
+            if (species_id == "") {
+                species_id = "-1";
+            }
+            if (height == "") {
+                height = "-1";
+            }
+            if (weight == "") {
+                weight = "-1";
+            }
+            if (base_experience == "") {
+                base_experience = "-1";
+            }
+            if (order == "") {
+                order = "-1";
+            }
+            if (is_default == "") {
+                is_default = "-1";
+            }
             Pokemon *pokemon = new Pokemon(id, name, species_id, height, weight, base_experience, order, is_default);
             allPokemon.push_back(pokemon);
         }
@@ -343,6 +421,82 @@ int storePokemon() {
 }
 
 int storeMoves() {
+
+    std::ifstream file;
+    file.open("pokedex/pokedex/data/csv/moves.csv");
+    if (file.is_open()) {
+        std:: string id, name, generation_id, type_id, power, pp, accuracy, priority, target_id, damage_class_id, effect_id,
+            effect_chance, contest_type_id, contest_effect_id, super_contest_effect_id;
+        getline(file, id, '\n');
+        while(getline(file, id, ',')) {
+            getline(file, name, ',');
+            getline(file, generation_id, ',');
+            getline(file, type_id, ',');
+            getline(file, power, ',');
+            getline(file, pp, ',');
+            getline(file, accuracy, ',');
+            getline(file, priority, ',');
+            getline(file, target_id, ',');
+            getline(file, damage_class_id, ',');
+            getline(file, effect_id, ',');
+            getline(file, effect_chance, ',');
+            getline(file, contest_type_id, ',');
+            getline(file, contest_effect_id, ',');
+            getline(file, super_contest_effect_id, '\n');
+            if (id == "") {
+                id = "-1";
+            }
+            if (name == "") {
+                name = "-1";
+            }
+            if (generation_id == "") {
+                generation_id = "-1";
+            }
+            if (type_id == "") {
+                type_id = "-1";
+            }
+            if (power == "") {
+                power = "-1";
+            }
+            if (pp == "") {
+                pp = "-1";
+            }
+            if (accuracy == "") {
+                accuracy = "-1";
+            }
+            if (priority == "") {
+                priority = "-1";
+            }
+            if (target_id == "") {
+                target_id = "-1";
+            }
+            if (damage_class_id == "") {
+                damage_class_id = "-1";
+            }
+            if (effect_id == "") {
+                effect_id = "-1";
+            }
+            if (effect_chance == "") {
+                effect_chance = "-1";
+            }
+            if (contest_type_id == "") {
+                contest_type_id = "-1";
+            }
+            if (contest_effect_id == "") {
+                contest_effect_id = "-1";
+            }
+            if (super_contest_effect_id == "") {
+                super_contest_effect_id = "-1";
+            }
+            Move *move = new Move(id, name, generation_id, type_id, power, pp, accuracy, priority, target_id, damage_class_id,
+                  effect_id, effect_chance, contest_type_id, contest_effect_id, super_contest_effect_id);
+            allMoves.push_back(move);
+        }
+    }
+    else {
+        //file not opened successfully
+        return 1;
+    }
 
     return 0;
 
