@@ -163,6 +163,38 @@ public:
             std::string base_experience, std::string order, std::string is_default) :
         id(stoi(id)), name(name), species_id(stoi(species_id)), height(stoi(height)), weight(stoi(weight)),
         base_experience(stoi(base_experience)), order(stoi(order)), is_default(stoi(is_default)) {
+        pokemonString = "";
+        if (this->id != -1) {
+            pokemonString += id;
+        }
+        pokemonString += ",";
+        if (this->name != "-1") {
+            pokemonString += name;
+        }
+        pokemonString += ",";
+        if (this->species_id != -1) {
+            pokemonString += species_id;
+        }
+        pokemonString += ",";
+        if (this->height != -1) {
+            pokemonString += height;
+        }
+        pokemonString += ",";
+        if (this->weight != -1) {
+            pokemonString += weight;
+        }
+        pokemonString += ",";
+        if (this->base_experience != -1) {
+            pokemonString += base_experience;
+        }
+        pokemonString += ",";
+        if (this->order != -1) {
+            pokemonString += order;
+        }
+        pokemonString += ",";
+        if (this->is_default != -1) {
+            pokemonString += is_default;
+        }
         pokemonString = id + "," + name + "," + species_id + "," + height + "," + weight + "," + base_experience + "," +
                 order + "," + is_default;
     }
