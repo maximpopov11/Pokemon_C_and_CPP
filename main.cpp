@@ -309,6 +309,253 @@ public:
     }
 };
 
+class PokemonMove {
+public:
+    int pokemon_id;
+    int version_group_id;
+    int move_id;
+    int pokemon_move_method_id;
+    int level;
+    int order;
+    std::string pokemonMoveString;
+
+    PokemonMove(std::string pokemon_id, std::string version_group_id, std::string move_id, std::string pokemon_move_method_id,
+            std::string level, std::string order) {
+        this->pokemon_id = stoi(pokemon_id);
+        this->version_group_id = stoi(version_group_id);
+        this->move_id = stoi(move_id);
+        this->pokemon_move_method_id = stoi(pokemon_move_method_id);
+        this->level = stoi(level);
+        this->order = stoi(order);
+        pokemonMoveString = "";
+        if (this->pokemon_id != -1) {
+            pokemonMoveString += pokemon_id;
+        }
+        pokemonMoveString += ",";
+        if (this->version_group_id != -1) {
+            pokemonMoveString += version_group_id;
+        }
+        pokemonMoveString += ",";
+        if (this->move_id != -1) {
+            pokemonMoveString += move_id;
+        }
+        pokemonMoveString += ",";
+        if (this->pokemon_move_method_id != -1) {
+            pokemonMoveString += pokemon_move_method_id;
+        }
+        pokemonMoveString += ",";
+        if (this->level != -1) {
+            pokemonMoveString += level;
+        }
+        pokemonMoveString += ",";
+        if (this->order != -1) {
+            pokemonMoveString += order;
+        }
+    }
+
+    std::string toString() {
+        return pokemonMoveString;
+    }
+};
+
+class PokemonSpecies {
+
+public:
+    int id;
+    std::string name;
+    int generation_id;
+    int evolves_from_species_id;
+    int evolution_chain_id;
+    int color_id;
+    int shape_id;
+    int habitat_id;
+    int gender_rate;
+    int capture_rate;
+    int base_happiness;
+    int is_baby;
+    int hatch_counter;
+    int has_gender_differences;
+    int growth_rate_id;
+    int forms_switchable;
+    int is_legendary;
+    int is_mythical;
+    int order;
+    int conquest_order;
+    std::string pokemonSpeciesString;
+
+    PokemonSpecies(std::string id, std::string name, std::string generation_id, std::string evolves_from_species_id,
+         std::string evolution_chain_id, std::string color_id, std::string shape_id, std::string habitat_id,
+         std::string gender_rate, std::string capture_rate, std::string base_happiness, std::string is_baby,
+         std::string hatch_counter, std::string has_gender_differences, std::string growth_rate_id,
+         std::string forms_switchable, std::string is_legendary, std::string is_mythical, std::string order,
+         std::string conquest_order) {
+        this->id = stoi(id);
+        this->name = name;
+        this->generation_id = stoi(generation_id);
+        this->evolves_from_species_id = stoi(evolves_from_species_id);
+        this->evolution_chain_id = stoi(evolution_chain_id);
+        this->color_id = stoi(color_id);
+        this->shape_id = stoi(shape_id);
+        this->habitat_id = stoi(habitat_id);
+        this->gender_rate = stoi(gender_rate);
+        this->capture_rate = stoi(capture_rate);
+        this->base_happiness = stoi(base_happiness);
+        this->is_baby = stoi(is_baby);
+        this->hatch_counter = stoi(hatch_counter);
+        this->has_gender_differences = stoi(has_gender_differences);
+        this->growth_rate_id = stoi(growth_rate_id);
+        this->forms_switchable = stoi(forms_switchable);
+        this->is_legendary = stoi(is_legendary);
+        this->is_mythical = stoi(is_mythical);
+        this->order = stoi(order);
+        this->conquest_order = stoi(conquest_order);
+        pokemonSpeciesString = "";
+        if (this->id != -1) {
+            pokemonSpeciesString += id;
+        }
+        pokemonSpeciesString += ",";
+        if (this->name != "-1") {
+            pokemonSpeciesString += name;
+        }
+        pokemonSpeciesString += ",";
+        if (this->generation_id != -1) {
+            pokemonSpeciesString += generation_id;
+        }
+        pokemonSpeciesString += ",";
+        if (this->evolves_from_species_id != -1) {
+            pokemonSpeciesString += evolves_from_species_id;
+        }
+        pokemonSpeciesString += ",";
+        if (this->evolution_chain_id != -1) {
+            pokemonSpeciesString += evolution_chain_id;
+        }
+        pokemonSpeciesString += ",";
+        if (this->color_id != -1) {
+            pokemonSpeciesString += color_id;
+        }
+        pokemonSpeciesString += ",";
+        if (this->shape_id != -1) {
+            pokemonSpeciesString += shape_id;
+        }
+        pokemonSpeciesString += ",";
+        if (this->habitat_id != -1) {
+            pokemonSpeciesString += habitat_id;
+        }
+        pokemonSpeciesString += ",";
+        if (this->gender_rate != -1) {
+            pokemonSpeciesString += gender_rate;
+        }
+        pokemonSpeciesString += ",";
+        if (this->capture_rate != -1) {
+            pokemonSpeciesString += capture_rate;
+        }
+        pokemonSpeciesString += ",";
+        if (this->base_happiness != -1) {
+            pokemonSpeciesString += base_happiness;
+        }
+        pokemonSpeciesString += ",";
+        if (this->is_baby != -1) {
+            pokemonSpeciesString += is_baby;
+        }
+        pokemonSpeciesString += ",";
+        if (this->hatch_counter != -1) {
+            pokemonSpeciesString += hatch_counter;
+        }
+        pokemonSpeciesString += ",";
+        if (this->has_gender_differences != -1) {
+            pokemonSpeciesString += has_gender_differences;
+        }
+        pokemonSpeciesString += ",";
+        if (this->growth_rate_id != -1) {
+            pokemonSpeciesString += growth_rate_id;
+        }
+        pokemonSpeciesString += ",";
+        if (this->forms_switchable != -1) {
+            pokemonSpeciesString += forms_switchable;
+        }
+        pokemonSpeciesString += ",";
+        if (this->is_legendary != -1) {
+            pokemonSpeciesString += is_legendary;
+        }
+        pokemonSpeciesString += ",";
+        if (this->is_mythical != -1) {
+            pokemonSpeciesString += is_mythical;
+        }
+        pokemonSpeciesString += ",";
+        if (this->order != -1) {
+            pokemonSpeciesString += order;
+        }
+        pokemonSpeciesString += ",";
+        if (this->conquest_order != -1) {
+            pokemonSpeciesString += conquest_order;
+        }
+    }
+
+    std::string toString() {
+        return pokemonSpeciesString;
+    }
+};
+
+class Experience {
+public:
+    int growth_rate_id;
+    int level;
+    int experience;
+    std::string experienceString;
+
+    Experience(std::string growth_rate_id, std::string level, std::string experience) {
+        this->growth_rate_id = stoi(growth_rate_id);
+        this->level = stoi(level);
+        this->experience = stoi(experience);
+        experienceString = "";
+        if (this->growth_rate_id != -1) {
+            experienceString += growth_rate_id;
+        }
+        experienceString += ",";
+        if (this->level != -1) {
+            experienceString += level;
+        }
+        experienceString += ",";
+        if (this->experience != -1) {
+            experienceString += experience;
+        }
+    }
+
+    std::string toString() {
+        return experienceString;
+    }
+};
+
+class TypeName {
+public:
+    int type_id;
+    int local_language_id;
+    std::string name;
+    std::string typeNameString;
+
+    TypeName(std::string type_id, std::string local_language_id, std::string name) {
+        this->type_id = stoi(type_id);
+        this->local_language_id = stoi(local_language_id);
+        this->name = name;
+        typeNameString = "";
+        if (this->type_id != -1) {
+            typeNameString += type_id;
+        }
+        typeNameString += ",";
+        if (this->local_language_id != -1) {
+            typeNameString += local_language_id;
+        }
+        typeNameString += ",";
+        if (this->name != "-1") {
+            typeNameString += name;
+        }
+    }
+
+    std::string toString() {
+        return typeNameString;
+    }
+};
+
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
 int hiker_distance_tile [TILE_LENGTH_Y][TILE_WIDTH_X];
 
