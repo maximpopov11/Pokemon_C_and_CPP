@@ -570,6 +570,10 @@ static int32_t comparator_character_movement(const void *key, const void *with) 
 int print_usage();
 int storePokemon();
 int storeMoves();
+int storePokemonMoves();
+int storePokemonSpecies();
+int storeExperience();
+int storeTypeNames();
 //commented due to database info failing to make
 //int printData(std::vector<DatabaseInfo *> dataVector);
 int initialize_terminal();
@@ -602,6 +606,10 @@ int print_tile_trainer_distances_printer(Tile *tile);
 
 std::vector<Pokemon *> allPokemon;
 std::vector<Move *> allMoves;
+std::vector<PokemonMove *> allPokemonMoves;
+std::vector<PokemonSpecies *> allPokemonSpecies;
+std::vector<Experience *> allExperience;
+std::vector<TypeName *> allTypeNames;
 Tile *world[WORLD_LENGTH_Y][WORLD_WIDTH_X] = {0};
 int current_tile_x;
 int current_tile_y;
@@ -634,6 +642,18 @@ int main(int argc, char *argv[]) {
     if (storeMoves() != 0) {
         std::cout << "File not opened successfully. File: moves.csv" << "\n";
     }
+    if (storePokemonMoves() != 0) {
+        std::cout << "File not opened successfully. File: pokemon_moves.csv" << "\n";
+    }
+    if (storePokemonSpecies() != 0) {
+        std::cout << "File not opened successfully. File: pokemon_species.csv" << "\n";
+    }
+    if (storeExperience() != 0) {
+        std::cout << "File not opened successfully. File: experience.csv" << "\n";
+    }
+    if (storeTypeNames() != 0) {
+        std::cout << "File not opened successfully. File: type_names.csv" << "\n";
+    }
 
     //todo: ASSIGNED: store and print all files like Pokemon
     //todo: ASSIGNED: don't print -1 empty placeholder
@@ -654,16 +674,24 @@ int main(int argc, char *argv[]) {
         }
     }
     else if (fileName == "pokemon_moves") {
-        std::cout << "Opening pokemon_moves.csv..." << "\n";
+        for (int i = 0; i < (int)allPokemonMoves.size(); i++) {
+            std::cout << allPokemonMoves[i]->toString() << "\n";
+        }
     }
     else if (fileName == "pokemon_species") {
-        std::cout << "Opening pokemon_species.csv..." << "\n";
+        for (int i = 0; i < (int)allPokemonSpecies.size(); i++) {
+            std::cout << allPokemonSpecies[i]->toString() << "\n";
+        }
     }
     else if (fileName == "experience") {
-        std::cout << "Opening experience.csv..." << "\n";
+        for (int i = 0; i < (int)allExperience.size(); i++) {
+            std::cout << allExperience[i]->toString() << "\n";
+        }
     }
     else if (fileName == "type_names") {
-        std::cout << "Opening type_names.csv..." << "\n";
+        for (int i = 0; i < (int)allTypeNames.size(); i++) {
+            std::cout << allTypeNames[i]->toString() << "\n";
+        }
     }
     else {
         std::cout << "Input file name: " << fileName << " is not a valid file" << "\n";
