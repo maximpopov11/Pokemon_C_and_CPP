@@ -791,7 +791,7 @@ int storeMoves() {
     file.open("pokedex/pokedex/data/csv/moves.csv");
     if (file.is_open()) {
         std:: string id, name, generation_id, type_id, power, pp, accuracy, priority, target_id, damage_class_id, effect_id,
-            effect_chance, contest_type_id, contest_effect_id, super_contest_effect_id;
+                effect_chance, contest_type_id, contest_effect_id, super_contest_effect_id;
         getline(file, id, '\n');
         while(getline(file, id, ',')) {
             getline(file, name, ',');
@@ -854,8 +854,225 @@ int storeMoves() {
                 super_contest_effect_id = "-1";
             }
             Move *move = new Move(id, name, generation_id, type_id, power, pp, accuracy, priority, target_id, damage_class_id,
-                  effect_id, effect_chance, contest_type_id, contest_effect_id, super_contest_effect_id);
+                                  effect_id, effect_chance, contest_type_id, contest_effect_id, super_contest_effect_id);
             allMoves.push_back(move);
+        }
+    }
+    else {
+        //file not opened successfully
+        return 1;
+    }
+
+    return 0;
+
+}
+
+int storePokemonMoves() {
+
+    std::ifstream file;
+    file.open("pokedex/pokedex/data/csv/pokemon_moves.csv");
+    if (file.is_open()) {
+        std:: string pokemon_id, version_group_id, move_id, pokemon_move_method_id, level, order;
+        getline(file, pokemon_id, '\n');
+        while(getline(file, pokemon_id, ',')) {
+            getline(file, version_group_id, ',');
+            getline(file, move_id, ',');
+            getline(file, pokemon_move_method_id, ',');
+            getline(file, level, ',');
+            getline(file, order, '\n');
+            if (pokemon_id == "") {
+                pokemon_id = "-1";
+            }
+            if (version_group_id == "") {
+                version_group_id = "-1";
+            }
+            if (move_id == "") {
+                move_id = "-1";
+            }
+            if (pokemon_move_method_id == "") {
+                pokemon_move_method_id = "-1";
+            }
+            if (level == "") {
+                level = "-1";
+            }
+            if (order == "") {
+                order = "-1";
+            }
+            PokemonMove *pokemonMove = new PokemonMove(pokemon_id, version_group_id, move_id, pokemon_move_method_id, level,
+                order);
+            allPokemonMoves.push_back(pokemonMove);
+        }
+    }
+    else {
+        //file not opened successfully
+        return 1;
+    }
+
+    return 0;
+
+}
+
+int storePokemonSpecies() {
+
+    std::ifstream file;
+    file.open("pokedex/pokedex/data/csv/pokemon_species.csv");
+    if (file.is_open()) {
+        std:: string id, identifier, generation_id, evolves_from_species_id, evolution_chain_id, color_id, shape_id,
+            habitat_id, gender_rate, capture_rate, base_happiness, is_baby, hatch_counter, has_gender_differences,
+            growth_rate_id, forms_switchable, is_legendary, is_mythical, order, conquest_order;
+        getline(file, id, '\n');
+        while(getline(file, id, ',')) {
+            getline(file, identifier, ',');
+            getline(file, generation_id, ',');
+            getline(file, evolves_from_species_id, ',');
+            getline(file, evolution_chain_id, ',');
+            getline(file, color_id, ',');
+            getline(file, shape_id, ',');
+            getline(file, habitat_id, ',');
+            getline(file, gender_rate, ',');
+            getline(file, capture_rate, ',');
+            getline(file, base_happiness, ',');
+            getline(file, is_baby, ',');
+            getline(file, hatch_counter, ',');
+            getline(file, has_gender_differences, ',');
+            getline(file, growth_rate_id, ',');
+            getline(file, forms_switchable, ',');
+            getline(file, is_legendary, ',');
+            getline(file, is_mythical, ',');
+            getline(file, order, ',');
+            getline(file, conquest_order, '\n');
+            if (id == "") {
+                id = "-1";
+            }
+            if (identifier == "") {
+                identifier = "-1";
+            }
+            if (generation_id == "") {
+                generation_id = "-1";
+            }
+            if (generation_id == "") {
+                generation_id = "-1";
+            }
+            if (evolves_from_species_id == "") {
+                evolves_from_species_id = "-1";
+            }
+            if (evolution_chain_id == "") {
+                evolution_chain_id = "-1";
+            }
+            if (color_id == "") {
+                color_id = "-1";
+            }
+            if (shape_id == "") {
+                shape_id = "-1";
+            }
+            if (habitat_id == "") {
+                habitat_id = "-1";
+            }
+            if (gender_rate == "") {
+                gender_rate = "-1";
+            }
+            if (capture_rate == "") {
+                capture_rate = "-1";
+            }
+            if (base_happiness == "") {
+                base_happiness = "-1";
+            }
+            if (is_baby == "") {
+                is_baby = "-1";
+            }
+            if (hatch_counter == "") {
+                hatch_counter = "-1";
+            }
+            if (has_gender_differences == "") {
+                has_gender_differences = "-1";
+            }
+            if (growth_rate_id == "") {
+                growth_rate_id = "-1";
+            }
+            if (forms_switchable == "") {
+                forms_switchable = "-1";
+            }
+            if (is_legendary == "") {
+                is_legendary = "-1";
+            }
+            if (is_mythical == "") {
+                is_mythical = "-1";
+            }
+            if (order == "") {
+                order = "-1";
+            }
+            if (conquest_order == "") {
+                conquest_order = "-1";
+            }
+            PokemonSpecies *pokemonSpecies = new PokemonSpecies(id, identifier, generation_id, evolves_from_species_id,
+                evolution_chain_id, color_id, shape_id, habitat_id, gender_rate, capture_rate, base_happiness, is_baby,
+                hatch_counter, has_gender_differences, growth_rate_id, forms_switchable, is_legendary, is_mythical, order,
+                conquest_order);
+            allPokemonSpecies.push_back(pokemonSpecies);
+        }
+    }
+    else {
+        //file not opened successfully
+        return 1;
+    }
+
+    return 0;
+
+}
+
+int storeExperience() {
+
+    std::ifstream file;
+    file.open("pokedex/pokedex/data/csv/experience.csv");
+    if (file.is_open()) {
+        std::string growth_rate_id, level, experience;
+        getline(file, growth_rate_id, '\n');
+        while(getline(file, growth_rate_id, ',')) {
+            getline(file, level, ',');
+            getline(file, experience, ',');
+            if (growth_rate_id == "") {
+                growth_rate_id = "-1";
+            }
+            if (level == "") {
+                level = "-1";
+            }
+            if (experience == "") {
+                experience = "-1";
+            }
+            Experience *experience1 = new Experience(growth_rate_id, level, experience);
+            allExperience.push_back(experience1);
+        }
+    }
+    else {
+        //file not opened successfully
+        return 1;
+    }
+
+    return 0;
+
+}
+
+int storeTypeNames() {
+
+    std::ifstream file;
+    file.open("pokedex/pokedex/data/csv/type_names.csv");
+    if (file.is_open()) {
+        std::string type_id, local_language_id, name;
+        getline(file, type_id, '\n');
+        while(getline(file, type_id, ',')) {
+            getline(file, local_language_id, ',');
+            getline(file, name, ',');
+            if (type_id == "") {
+                type_id = "-1";
+            }
+            if (local_language_id == "") {
+                local_language_id = "-1";
+            }
+            if (name == "") {
+                name = "-1";
+            }
+            TypeName *typeName = new TypeName(type_id, local_language_id, name);
+            allTypeNames.push_back(typeName);
         }
     }
     else {
