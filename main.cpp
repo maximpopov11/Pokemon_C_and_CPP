@@ -1029,7 +1029,7 @@ int storeExperience() {
         getline(file, growth_rate_id, '\n');
         while(getline(file, growth_rate_id, ',')) {
             getline(file, level, ',');
-            getline(file, experience, ',');
+            getline(file, experience, '\n');
             if (growth_rate_id == "") {
                 growth_rate_id = "-1";
             }
@@ -1061,7 +1061,7 @@ int storeTypeNames() {
         getline(file, type_id, '\n');
         while(getline(file, type_id, ',')) {
             getline(file, local_language_id, ',');
-            getline(file, name, ',');
+            getline(file, name, '\n');
             if (type_id == "") {
                 type_id = "-1";
             }
