@@ -1,4 +1,4 @@
-make --dry-run --always-make --keep-going --print-directory
+make --dry-run --keep-going --print-directory
 make: Entering directory `/Users/maximpopov/VisualStudioCodeProjects/Pokemon_C_and_CPP'
 g++ main.cpp heap.c -g -Wall -o pokemon -lm -lncurses
 make: Leaving directory `/Users/maximpopov/VisualStudioCodeProjects/Pokemon_C_and_CPP'
