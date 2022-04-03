@@ -43,15 +43,7 @@ public:
     int hiker_weight;
     short color;
 
-    Terrain() {
-        this->id = 0;
-        this->printable_character = '_';
-        this->path_weight = 0;
-        this->pc_weight = 0;
-        this->rival_weight = 0;
-        this->hiker_weight = 0;
-        this->color = COLOR_BLACK;
-    }
+    Terrain() : Terrain(0, '_', 0, 0, 0, 0, COLOR_BLACK) {}
 
     Terrain(int id, char printable_character, int path_weight, int pc_weight, int rival_weight, int hiker_weight, short color) :
         id(id), printable_character(printable_character), path_weight(path_weight), pc_weight(pc_weight),
