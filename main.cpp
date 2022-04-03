@@ -576,7 +576,6 @@ int storeExperience();
 int storeTypeNames();
 //commented due to database info failing to make
 //int printData(std::vector<DatabaseInfo *> dataVector);
-int initialize_terminal();
 int turn_based_movement();
 int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
@@ -604,6 +603,88 @@ int print_tile_terrain(Tile *tile);
 int print_tile_trainer_distances(Tile *tile);
 int print_tile_trainer_distances_printer(Tile *tile);
 
+class UserInterface {
+public:
+    virtual void initializeTerminalUI() = 0;
+    virtual void endwinUI() = 0;
+    virtual char getchUI() = 0;
+    virtual void clearUI() = 0;
+    virtual void refreshUI() = 0;
+    virtual void addchUI(char ch) = 0;
+    virtual void addstrUI(const char * string) = 0;
+    virtual void mvaddchUI(int y, int x, char ch) = 0;
+    virtual void mvaddstrUI(int y, int x, const char * string) = 0;
+    virtual void init_pairUI(int i, short color1, short color2) = 0;
+    virtual void attrsetUI(int i) = 0;
+    virtual void attroffUI(int i) = 0;
+};
+
+class Ncurses : public UserInterface {
+public:
+    void initializeTerminalUI() {
+        initscr();
+        raw();
+        noecho();
+        curs_set(0);
+        keypad(stdscr, TRUE);
+    }
+    void endwinUI() {
+        endwin();
+    }
+    char getchUI() {
+        return getch();
+    }
+    void clearUI() {
+        clear();
+    }
+    void refreshUI() {
+        refresh();
+    }
+    void addchUI(char ch) {
+        addch(ch);
+    }
+    void addstrUI(const char * string) {
+        addstr(string);
+    }
+    virtual void mvaddchUI(int y, int x, char ch) {
+        mvaddch(y, x, ch);
+    }
+    void mvaddstrUI(int y, int x, const char * string) {
+        mvaddstr(y, x, string);
+    }
+    void init_pairUI(int i, short color1, short color2) {
+        init_pair(i, color1, color2);
+    }
+    void attrsetUI(int i) {
+        attrset(i);
+    }
+    void attroffUI(int i) {
+        attroff(i);
+    }
+};
+
+//mocks getch, does nothing for the others
+class NoNcurses : public UserInterface {
+public:
+    void initializeTerminalUI() {}
+    void endwinUI() {}
+    char getchUI() {
+        char c;
+        std::cin >> c;
+        return c;
+    }
+    void clearUI() {}
+    void refreshUI() {}
+    void addchUI(char ch) {}
+    void addstrUI(const char * string) {}
+    void mvaddchUI(int y, int x, char ch) {}
+    void mvaddstrUI(int y, int x, const char * string) {}
+    void init_pairUI(int i, short color1, short color2) {}
+    void attrsetUI(int i) {}
+    void attroffUI(int i) {}
+};
+
+UserInterface *interface;
 std::vector<Pokemon *> allPokemon;
 std::vector<Move *> allMoves;
 std::vector<PokemonMove *> allPokemonMoves;
@@ -618,9 +699,12 @@ int num_trainers;
 
 int main(int argc, char *argv[]) {
 
+    //todo: ASSIGNED: change to Ncurses on submission
+    interface = new Ncurses();
+
     //get arguments
 //    int opt = 0;
-//    int numtrainers = 10;
+    int numtrainers = 10;
 //    static struct option long_options[] = {
 //            {"numtrainers", required_argument,0,'t' },
 //            {0,0,0,0   }
@@ -700,27 +784,27 @@ int main(int argc, char *argv[]) {
 
 
     //check argument legality
-//    if (numtrainers < 0) {
-//        numtrainers = 0;
-//    }
-//    else if (numtrainers > MAX_NUM_TRAINERS) {
-//        numtrainers = MAX_NUM_TRAINERS;
-//    }
-//    num_trainers = numtrainers;
+    if (numtrainers < 0) {
+        numtrainers = 0;
+    }
+    else if (numtrainers > MAX_NUM_TRAINERS) {
+        numtrainers = MAX_NUM_TRAINERS;
+    }
+    num_trainers = numtrainers;
 
     //run program
-//    srand(time(NULL));
-//    initialize_terminal();
-//    Tile home_tile = create_tile(WORLD_CENTER_X, WORLD_CENTER_Y);
-//    current_tile_x = WORLD_CENTER_X;
-//    current_tile_y = WORLD_CENTER_Y;
-//    world[WORLD_CENTER_Y][WORLD_CENTER_X] = &home_tile;
-//    place_player_character(world[current_tile_y][current_tile_x]);
-//    while (turn_based_movement() == -1) {
-//        //-1 signals map was changed: call turn_based_movement for new map/turn heap
-//        //old and new Tile and heap have been updated correctly in change Tile (removed from old heap in turn_based_movement)
-//    }
-//    endwin();
+    srand(time(NULL));
+    interface->initializeTerminalUI();
+    Tile home_tile = create_tile(WORLD_CENTER_X, WORLD_CENTER_Y);
+    current_tile_x = WORLD_CENTER_X;
+    current_tile_y = WORLD_CENTER_Y;
+    world[WORLD_CENTER_Y][WORLD_CENTER_X] = &home_tile;
+    place_player_character(world[current_tile_y][current_tile_x]);
+    while (turn_based_movement() == -1) {
+        //-1 signals map was changed: call turn_based_movement for new map/turn heap
+        //old and new Tile and heap have been updated correctly in change Tile (removed from old heap in turn_based_movement)
+    }
+    interface->endwinUI();
     return 0;
 
 }
@@ -1096,18 +1180,6 @@ int storeTypeNames() {
 //
 //}
 
-int initialize_terminal() {
-
-    initscr();
-    raw();
-    noecho();
-    curs_set(0);
-    keypad(stdscr, TRUE);
-
-    return 0;
-
-}
-
 int turn_based_movement() {
 
     Tile *tile = world[current_tile_y][current_tile_x];
@@ -1115,10 +1187,10 @@ int turn_based_movement() {
     static Character *character;
     while ((character = (Character *) (heap_remove_min(turn_heap)))) {
         if (character->type_enum == PLAYER) {
-            clear();
-            addstr("It's your turn! Enter a command or press z for help!\n");
+            interface->clearUI();
+            interface->addstrUI("It's your turn! Enter a command or press z for help!\n");
             print_tile_terrain(tile);
-            refresh();
+            interface->refreshUI();
             int result = player_turn();
             if (result != 0) {
                 return result;
@@ -1382,7 +1454,7 @@ int player_turn() {
     int x = player_character->x;
     int y = player_character->y;
     while (turn_completed == 0) {
-        int input = getch();
+        int input = interface->getchUI();
         int moving = 0;
         int new_x = x;
         int new_y = y;
@@ -1421,18 +1493,18 @@ int player_turn() {
             } else if (tile->tile[y][x].terrain.id == mart->id) {
                 enter_mart();
             } else {
-                clear();
-                addstr("There is no pokecenter or pokemart here so you can't enter one!\n");
+                interface->clearUI();
+                interface->addstrUI("There is no pokecenter or pokemart here so you can't enter one!\n");
                 print_tile_terrain(tile);
             }
         } else if (input == '<') {
             if (player_character->in_building == 1) {
-                clear();
-                addstr("You have left the building!\n");
+                interface->clearUI();
+                interface->addstrUI("You have left the building!\n");
                 print_tile_terrain(tile);
             } else {
-                clear();
-                addstr("You aren't in a building so you can't leave one!\n");
+                interface->clearUI();
+                interface->addstrUI("You aren't in a building so you can't leave one!\n");
                 print_tile_terrain(tile);
             }
         } else if (input == '5' || input == ' ' || input == '.') {
@@ -1455,48 +1527,48 @@ int player_turn() {
             int type_x = 0;
             int position_x = 19;
             int defeated_status_x = 40;
-            clear();
-            addstr("Trainer list: Press escape to return to the map\n");
+            interface->clearUI();
+            interface->addstrUI("Trainer list: Press escape to return to the map\n");
             for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                 NonPlayerCharacter *trainer = trainers[i];
-                mvaddstr(screen_row, type_x, trainer->type_string.c_str());
-                mvaddstr(screen_row, position_x, " ");
+                interface->mvaddstrUI(screen_row, type_x, trainer->type_string.c_str());
+                interface->mvaddstrUI(screen_row, position_x, " ");
                 if (trainer->y != player_character->y) {
                     char y_distance[3];
                     if (trainer->y < player_character->y) {
                         sprintf(y_distance, "%d ", player_character->y - trainer->y);
-                        addstr(y_distance);
-                        addstr("North ");
+                        interface->addstrUI(y_distance);
+                        interface->addstrUI("North ");
                     }
                     else {
                         sprintf(y_distance, "%d ", trainer->y - player_character->y);
-                        addstr(y_distance);
-                        addstr("South ");
+                        interface->addstrUI(y_distance);
+                        interface->addstrUI("South ");
                     }
                 }
                 if (trainer->x != player_character->x) {
                     char x_distance[3];
                     if (trainer->x < player_character->x) {
                         sprintf(x_distance, "%d ", player_character->x - trainer->x);
-                        addstr(x_distance);
-                        addstr("West");
+                        interface->addstrUI(x_distance);
+                        interface->addstrUI("West");
                     }
                     else {
                         sprintf(x_distance, "%d ", trainer->x - player_character->x);
-                        addstr(x_distance);
-                        addstr("East");
+                        interface->addstrUI(x_distance);
+                        interface->addstrUI("East");
                     }
                 }
                 if (trainer->defeated == 1) {
-                    mvaddstr(screen_row, defeated_status_x, "Defeated");
+                    interface->mvaddstrUI(screen_row, defeated_status_x, "Defeated");
                 }
-                addstr("\n");
+                interface->addstrUI("\n");
                 screen_row++;
             }
-            refresh();
+            interface->refreshUI();
             chtype command = -1;
             while (command != 27 && command != ACS_UARROW && command != ACS_DARROW) {
-                command = getch();
+                command = interface->getchUI();
                 screen_row = 1;
                 if (command == 27) {
                     turn_completed = 1;
@@ -1508,284 +1580,284 @@ int player_turn() {
                         if (position < 0) {
                             position = 0;
                         }
-                        clear();
-                        addstr("Trainer list: Press escape to return to the map\n");
+                        interface->clearUI();
+                        interface->addstrUI("Trainer list: Press escape to return to the map\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                             NonPlayerCharacter *trainer = trainers[i];
-                            mvaddstr(screen_row, type_x, trainer->type_string.c_str());
-                            mvaddstr(screen_row, position_x, " ");
+                            interface->mvaddstrUI(screen_row, type_x, trainer->type_string.c_str());
+                            interface->mvaddstrUI(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
                                 char y_distance[3];
                                 if (trainer->y < player_character->y) {
                                     sprintf(y_distance, "%d ", player_character->y - trainer->y);
-                                    addstr(y_distance);
-                                    addstr("North ");
+                                    interface->addstrUI(y_distance);
+                                    interface->addstrUI("North ");
                                 }
                                 else {
                                     sprintf(y_distance, "%d ", trainer->y - player_character->y);
-                                    addstr(y_distance);
-                                    addstr("South ");
+                                    interface->addstrUI(y_distance);
+                                    interface->addstrUI("South ");
                                 }
                             }
                             if (trainer->x != player_character->x) {
                                 char x_distance[3];
                                 if (trainer->x < player_character->x) {
                                     sprintf(x_distance, "%d ", player_character->x - trainer->x);
-                                    addstr(x_distance);
-                                    addstr("West");
+                                    interface->addstrUI(x_distance);
+                                    interface->addstrUI("West");
                                 }
                                 else {
                                     sprintf(x_distance, "%d ", trainer->x - player_character->x);
-                                    addstr(x_distance);
-                                    addstr("East");
+                                    interface->addstrUI(x_distance);
+                                    interface->addstrUI("East");
                                 }
                             }
                             if (trainer->defeated == 1) {
-                                mvaddstr(screen_row, defeated_status_x, "Defeated");
+                                interface->mvaddstrUI(screen_row, defeated_status_x, "Defeated");
                             }
-                            addstr("\n");
+                            interface->addstrUI("\n");
                             screen_row++;
                         }
-                        refresh();
+                        interface->refreshUI();
                     }
                     else {
-                        clear();
-                        addstr("You are already at the top of the list so you cannot scroll up.\n");
+                        interface->clearUI();
+                        interface->addstrUI("You are already at the top of the list so you cannot scroll up.\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                             NonPlayerCharacter *trainer = trainers[i];
-                            mvaddstr(screen_row, type_x, trainer->type_string.c_str());
-                            mvaddstr(screen_row, position_x, " ");
+                            interface->mvaddstrUI(screen_row, type_x, trainer->type_string.c_str());
+                            interface->mvaddstrUI(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
                                 char y_distance[3];
                                 if (trainer->y < player_character->y) {
                                     sprintf(y_distance, "%d ", player_character->y - trainer->y);
-                                    addstr(y_distance);
-                                    addstr("North ");
+                                    interface->addstrUI(y_distance);
+                                    interface->addstrUI("North ");
                                 }
                                 else {
                                     sprintf(y_distance, "%d ", trainer->y - player_character->y);
-                                    addstr(y_distance);
-                                    addstr("South ");
+                                    interface->addstrUI(y_distance);
+                                    interface->addstrUI("South ");
                                 }
                             }
                             if (trainer->x != player_character->x) {
                                 char x_distance[3];
                                 if (trainer->x < player_character->x) {
                                     sprintf(x_distance, "%d ", player_character->x - trainer->x);
-                                    addstr(x_distance);
-                                    addstr("West");
+                                    interface->addstrUI(x_distance);
+                                    interface->addstrUI("West");
                                 }
                                 else {
                                     sprintf(x_distance, "%d ", trainer->x - player_character->x);
-                                    addstr(x_distance);
-                                    addstr("East");
+                                    interface->addstrUI(x_distance);
+                                    interface->addstrUI("East");
                                 }
                             }
                             if (trainer->defeated == 1) {
-                                mvaddstr(screen_row, defeated_status_x, "Defeated");
+                                interface->mvaddstrUI(screen_row, defeated_status_x, "Defeated");
                             }
-                            addstr("\n");
+                            interface->addstrUI("\n");
                             screen_row++;
                         }
-                        refresh();
+                        interface->refreshUI();
                     }
                 }
                 else if (command == KEY_DOWN) {
                     if (position < num_trainers - SCREEN_HEIGHT + 1) {
                         position += SCREEN_HEIGHT - 1;
-                        clear();
-                        addstr("Trainer list: Press escape to return to the map\n");
+                        interface->clearUI();
+                        interface->addstrUI("Trainer list: Press escape to return to the map\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                             NonPlayerCharacter *trainer = trainers[i];
-                            mvaddstr(screen_row, type_x, trainer->type_string.c_str());
-                            mvaddstr(screen_row, position_x, " ");
+                            interface->mvaddstrUI(screen_row, type_x, trainer->type_string.c_str());
+                            interface->mvaddstrUI(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
                                 char y_distance[3];
                                 if (trainer->y < player_character->y) {
                                     sprintf(y_distance, "%d ", player_character->y - trainer->y);
-                                    addstr(y_distance);
-                                    addstr("North ");
+                                    interface->addstrUI(y_distance);
+                                    interface->addstrUI("North ");
                                 }
                                 else {
                                     sprintf(y_distance, "%d ", trainer->y - player_character->y);
-                                    addstr(y_distance);
-                                    addstr("South ");
+                                    interface->addstrUI(y_distance);
+                                    interface->addstrUI("South ");
                                 }
                             }
                             if (trainer->x != player_character->x) {
                                 char x_distance[3];
                                 if (trainer->x < player_character->x) {
                                     sprintf(x_distance, "%d ", player_character->x - trainer->x);
-                                    addstr(x_distance);
-                                    addstr("West");
+                                    interface->addstrUI(x_distance);
+                                    interface->addstrUI("West");
                                 }
                                 else {
                                     sprintf(x_distance, "%d ", trainer->x - player_character->x);
-                                    addstr(x_distance);
-                                    addstr("East");
+                                    interface->addstrUI(x_distance);
+                                    interface->addstrUI("East");
                                 }
                             }
                             if (trainer->defeated == 1) {
-                                mvaddstr(screen_row, defeated_status_x, "Defeated");
+                                interface->mvaddstrUI(screen_row, defeated_status_x, "Defeated");
                             }
-                            addstr("\n");
+                            interface->addstrUI("\n");
                             screen_row++;
                         }
-                        refresh();
+                        interface->refreshUI();
                     }
                     else {
-                        clear();
-                        addstr("You are already at the bottom of the list so you cannot scroll down.\n");
+                        interface->clearUI();
+                        interface->addstrUI("You are already at the bottom of the list so you cannot scroll down.\n");
                         for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                             NonPlayerCharacter *trainer = trainers[i];
-                            mvaddstr(screen_row, type_x, trainer->type_string.c_str());
-                            mvaddstr(screen_row, position_x, " ");
+                            interface->mvaddstrUI(screen_row, type_x, trainer->type_string.c_str());
+                            interface->mvaddstrUI(screen_row, position_x, " ");
                             if (trainer->y != player_character->y) {
                                 char y_distance[3];
                                 if (trainer->y < player_character->y) {
                                     sprintf(y_distance, "%d ", player_character->y - trainer->y);
-                                    addstr(y_distance);
-                                    addstr("North ");
+                                    interface->addstrUI(y_distance);
+                                    interface->addstrUI("North ");
                                 }
                                 else {
                                     sprintf(y_distance, "%d ", trainer->y - player_character->y);
-                                    addstr(y_distance);
-                                    addstr("South ");
+                                    interface->addstrUI(y_distance);
+                                    interface->addstrUI("South ");
                                 }
                             }
                             if (trainer->x != player_character->x) {
                                 char x_distance[3];
                                 if (trainer->x < player_character->x) {
                                     sprintf(x_distance, "%d ", player_character->x - trainer->x);
-                                    addstr(x_distance);
-                                    addstr("West");
+                                    interface->addstrUI(x_distance);
+                                    interface->addstrUI("West");
                                 }
                                 else {
                                     sprintf(x_distance, "%d ", trainer->x - player_character->x);
-                                    addstr(x_distance);
-                                    addstr("East");
+                                    interface->addstrUI(x_distance);
+                                    interface->addstrUI("East");
                                 }
                             }
                             if (trainer->defeated == 1) {
-                                mvaddstr(screen_row, defeated_status_x, "Defeated");
+                                interface->mvaddstrUI(screen_row, defeated_status_x, "Defeated");
                             }
-                            addstr("\n");
+                            interface->addstrUI("\n");
                             screen_row++;
                         }
-                        refresh();
+                        interface->refreshUI();
                     }
                 }
                 else {
                     //command is invalid
-                    clear();
-                    addstr("That is not a valid command! Press escape to return to the map.\n");
+                    interface->clearUI();
+                    interface->addstrUI("That is not a valid command! Press escape to return to the map.\n");
                     for (int i = position; i < position + SCREEN_HEIGHT - 1 && i < num_trainers; i++) {
                         NonPlayerCharacter *trainer = trainers[i];
-                        mvaddstr(screen_row, type_x, trainer->type_string.c_str());
-                        mvaddstr(screen_row, position_x, " ");
+                        interface->mvaddstrUI(screen_row, type_x, trainer->type_string.c_str());
+                        interface->mvaddstrUI(screen_row, position_x, " ");
                         if (trainer->y != player_character->y) {
                             char y_distance[3];
                             if (trainer->y < player_character->y) {
                                 sprintf(y_distance, "%d ", player_character->y - trainer->y);
-                                addstr(y_distance);
-                                addstr("North ");
+                                interface->addstrUI(y_distance);
+                                interface->addstrUI("North ");
                             }
                             else {
                                 sprintf(y_distance, "%d ", trainer->y - player_character->y);
-                                addstr(y_distance);
-                                addstr("South ");
+                                interface->addstrUI(y_distance);
+                                interface->addstrUI("South ");
                             }
                         }
                         if (trainer->x != player_character->x) {
                             char x_distance[3];
                             if (trainer->x < player_character->x) {
                                 sprintf(x_distance, "%d ", player_character->x - trainer->x);
-                                addstr(x_distance);
-                                addstr("West");
+                                interface->addstrUI(x_distance);
+                                interface->addstrUI("West");
                             }
                             else {
                                 sprintf(x_distance, "%d ", trainer->x - player_character->x);
-                                addstr(x_distance);
-                                addstr("East");
+                                interface->addstrUI(x_distance);
+                                interface->addstrUI("East");
                             }
                         }
                         if (trainer->defeated == 1) {
-                            mvaddstr(screen_row, defeated_status_x, "Defeated");
+                            interface->mvaddstrUI(screen_row, defeated_status_x, "Defeated");
                         }
-                        addstr("\n");
+                        interface->addstrUI("\n");
                         screen_row++;
                     }
-                    refresh();
+                    interface->refreshUI();
                 }
             }
         } else if (input == 'Q') {
-            clear();
-            addstr("Are you sure you want to quit (y/n)? All progress will be lost.\n");
-            refresh();
+            interface->clearUI();
+            interface->addstrUI("Are you sure you want to quit (y/n)? All progress will be lost.\n");
+            interface->refreshUI();
             int quit = -1;
             while (quit != 'y' || quit != 'n') {
-                quit = getch();
+                quit = interface->getchUI();
                 if (quit == 'y') {
                     return 1;
                 } else if (quit == 'n') {
-                    clear();
-                    addstr("It's your turn! Enter a command or press z for help!\n");
+                    interface->clearUI();
+                    interface->addstrUI("It's your turn! Enter a command or press z for help!\n");
                     print_tile_terrain(tile);
                 } else {
-                    clear();
-                    addstr("Please enter (y/n) to quit. If you quit all progress will be lost.\n");
-                    refresh();
+                    interface->clearUI();
+                    interface->addstrUI("Please enter (y/n) to quit. If you quit all progress will be lost.\n");
+                    interface->refreshUI();
                 }
             }
         } else if (input == 'z') {
             if (in_help == 0) {
                 //enter help
-                clear();
-                addstr("Enter z to enter/leave the help menu.\n");
-                addstr("Enter 9 or u to move one cell to the upper right.\n");
-                addstr("Enter 8 or k to move one cell up.\n");
-                addstr("Enter 7 or y to move one cell to the upper left.\n");
-                addstr("Enter 6 or l to move one cell to the right.\n");
-                addstr("Enter 5 or space or . to rest for a turn.\n");
-                addstr("Enter 4 or h to move one cell to the left.\n");
-                addstr("Enter 3 or n to move one cell to the lower right.\n");
-                addstr("Enter 2 or j to move one cell down.\n");
-                addstr("Enter 1 or b to move one cell to the lower left.\n");
-                addstr("Enter > to enter a pokemart or pokecenter.\n");
-                addstr("Enter < to leave a pokemart or pokecenter.\n");
-                addstr("Enter t to display a list of trainers.\n");
-                addstr("Enter up arrow to scroll up on the trainer list.\n");
-                addstr("Enter down arrow to scroll up on the trainer list.\n");
-                addstr("Enter escape to leave the trainer list.\n");
-                addstr("Enter Q to quit the game.\n");
-                refresh();
+                interface->clearUI();
+                interface->addstrUI("Enter z to enter/leave the help menu.\n");
+                interface->addstrUI("Enter 9 or u to move one cell to the upper right.\n");
+                interface->addstrUI("Enter 8 or k to move one cell up.\n");
+                interface->addstrUI("Enter 7 or y to move one cell to the upper left.\n");
+                interface->addstrUI("Enter 6 or l to move one cell to the right.\n");
+                interface->addstrUI("Enter 5 or space or . to rest for a turn.\n");
+                interface->addstrUI("Enter 4 or h to move one cell to the left.\n");
+                interface->addstrUI("Enter 3 or n to move one cell to the lower right.\n");
+                interface->addstrUI("Enter 2 or j to move one cell down.\n");
+                interface->addstrUI("Enter 1 or b to move one cell to the lower left.\n");
+                interface->addstrUI("Enter > to enter a pokemart or pokecenter.\n");
+                interface->addstrUI("Enter < to leave a pokemart or pokecenter.\n");
+                interface->addstrUI("Enter t to display a list of trainers.\n");
+                interface->addstrUI("Enter up arrow to scroll up on the trainer list.\n");
+                interface->addstrUI("Enter down arrow to scroll up on the trainer list.\n");
+                interface->addstrUI("Enter escape to leave the trainer list.\n");
+                interface->addstrUI("Enter Q to quit the game.\n");
+                interface->refreshUI();
             }
             else {
                 //exit help
-                clear();
-                addstr("It's your turn! Enter a command or press z for help!\n");
+                interface->clearUI();
+                interface->addstrUI("It's your turn! Enter a command or press z for help!\n");
                 print_tile_terrain(tile);
             }
             in_help = 1 - in_help;
         } else {
-            clear();
-            addstr("That is not a valid command. Enter z for help!\n");
+            interface->clearUI();
+            interface->addstrUI("That is not a valid command. Enter z for help!\n");
             print_tile_terrain(tile);
-            refresh();
+            interface->refreshUI();
         }
 
         //call movement function if moving
         if (moving == 1) {
             //if Terrain can be crossed
             if (tile->tile[new_y][new_x].terrain.pc_weight == INT_MAX) {
-                clear();
-                addstr("You can't cross that kind of Terrain!\n");
+                interface->clearUI();
+                interface->addstrUI("You can't cross that kind of Terrain!\n");
                 print_tile_terrain(tile);
             }
                 //if there is an undefeated trainer there
             else if (tile->tile[new_y][new_x].character != NULL && tile->tile[new_y][new_x].character->defeated != 0) {
-                clear();
-                addstr("You have already defeated that trainer so they are too scared to battle you again!");
+                interface->clearUI();
+                interface->addstrUI("You have already defeated that trainer so they are too scared to battle you again!");
                 print_tile_terrain(tile);
             }
                 //if you are exiting the map
@@ -1816,10 +1888,10 @@ int player_turn() {
                 else {
                     //todo: RUN BUG TEST: test trying to move off of edge of world
                     //cannot change Tile because at edge of world
-                    clear();
-                    addstr("You can't go off of the edge of the world like that! It's your turn! Enter a command or press z for help!\n");
+                    interface->clearUI();
+                    interface->addstrUI("You can't go off of the edge of the world like that! It's your turn! Enter a command or press z for help!\n");
                     print_tile_terrain(tile);
-                    refresh();
+                    interface->refreshUI();
                 }
             }
             else {
@@ -1876,24 +1948,24 @@ int combat(Character *from_character, Character *to_character) {
         //player attacks trainer
         to_character->defeated = 1;
         to_character->color = COLOR_YELLOW;
-        clear();
-        addstr("Victory! You challenged a trainer to a duel and defeated them soundly! Press escape to leave.\n");
-        refresh();
+        interface->clearUI();
+        interface->addstrUI("Victory! You challenged a trainer to a duel and defeated them soundly! Press escape to leave.\n");
+        interface->refreshUI();
     }
     else {
         from_character->defeated = 1;
         from_character->color = COLOR_YELLOW;
         //trainer attacks player
-        clear();
-        addstr("Victory! A trainer challenged you to a duel and you trounced them! Press escape to leave.\n");
-        refresh();
+        interface->clearUI();
+        interface->addstrUI("Victory! A trainer challenged you to a duel and you trounced them! Press escape to leave.\n");
+        interface->refreshUI();
     }
     int command = -1;
     while (command != 27) {
-        command = getch();
-        clear();
-        addstr("Invalid command. Press press escape to stop your victory dance after defeating that trainer.\n");
-        refresh();
+        command = interface->getchUI();
+        interface->clearUI();
+        interface->addstrUI("Invalid command. Press press escape to stop your victory dance after defeating that trainer.\n");
+        interface->refreshUI();
     }
     return 0;
 
@@ -1902,9 +1974,9 @@ int combat(Character *from_character, Character *to_character) {
 int enter_center() {
 
     player_character->in_building = 1;
-    clear();
-    addstr("You are in a pokecenter! Unfortunately this center is rather barren. Leave by entering \'<\'\n");
-    refresh();
+    interface->clearUI();
+    interface->addstrUI("You are in a pokecenter! Unfortunately this center is rather barren. Leave by entering \'<\'\n");
+    interface->refreshUI();
 
     return 0;
 
@@ -1913,9 +1985,9 @@ int enter_center() {
 int enter_mart() {
 
     player_character->in_building = 1;
-    clear();
-    addstr("You are in a pokemart! Unfortunately this mart is rather barren. Leave by entering \'<\'\n");
-    refresh();
+    interface->clearUI();
+    interface->addstrUI("You are in a pokemart! Unfortunately this mart is rather barren. Leave by entering \'<\'\n");
+    interface->refreshUI();
 
     return 0;
 
@@ -2623,7 +2695,7 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
         Character *trainer = new Character(x, y, trainer_type, type_string, character,
                                            COLOR_RED, 0, 0, 0, 0,
                                            0, 0);
-        //todo: CRASH: Segmentation fault. Maybe giving pointer/non pointer when should give the other? This is the first heap insert.
+        //todo: CRASH: Segmentation fault. Correctly sending pointer.
         heap_insert(turn_heap, trainer);
         tile->tile[y][x].character = trainer;
         num_trainer--;
@@ -2738,24 +2810,24 @@ int print_tile_terrain(Tile *tile) {
             if (tile->tile[y][x].character != NULL) {
                 printable_character = tile->tile[y][x].character->printable_character;
                 //todo: RUN BUG: color isn't showing. Currently testing preset color rather than obtained from data.
-                init_pair(1, COLOR_RED, COLOR_BLACK);
-                //init_pair(1, Tile->Tile[y][x].Character->color, COLOR_BLACK);
-                attrset(COLOR_PAIR(1));
-                mvaddch(y + 1, x, printable_character);
-                refresh();
-                attroff(COLOR_PAIR(1));
+                interface->init_pairUI(1, COLOR_RED, COLOR_BLACK);
+                //interface->init_pairUI(1, Tile->Tile[y][x].Character->color, COLOR_BLACK);
+                interface->attrsetUI(COLOR_PAIR(1));
+                interface->mvaddchUI(y + 1, x, printable_character);
+                interface->refreshUI();
+                interface->attroffUI(COLOR_PAIR(1));
             }
             else {
-                init_pair(1, tile->tile[y][x].terrain.color, COLOR_BLACK);
-                attrset(COLOR_PAIR(1));
-                mvaddch(y + 1, x, printable_character);
-                refresh();
-                attroff(COLOR_PAIR(1));
+                interface->init_pairUI(1, tile->tile[y][x].terrain.color, COLOR_BLACK);
+                interface->attrsetUI(COLOR_PAIR(1));
+                interface->mvaddchUI(y + 1, x, printable_character);
+                interface->refreshUI();
+                interface->attroffUI(COLOR_PAIR(1));
             }
         }
     }
-    addch('\n');
-    refresh();
+    interface->addchUI('\n');
+    interface->refreshUI();
 
     return 0;
 
