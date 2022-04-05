@@ -133,7 +133,6 @@ public:
     int east_y;
     int west_y;
     PlayerCharacter *player_character;
-    struct heap *turn_heap;
 
     Tile() {
         this->x = -1;
@@ -695,6 +694,7 @@ int current_tile_x;
 int current_tile_y;
 Character *player_character;
 int num_trainers;
+struct heap turn_heap;
 
 int main(int argc, char *argv[]) {
 
@@ -789,6 +789,7 @@ int main(int argc, char *argv[]) {
     //run program
     srand(time(NULL));
     interface->initializeTerminalUI();
+    heap_init(&turn_heap, comparator_character_movement, NULL);
     Tile home_tile = create_tile(WORLD_CENTER_X, WORLD_CENTER_Y);
     current_tile_x = WORLD_CENTER_X;
     current_tile_y = WORLD_CENTER_Y;
@@ -1177,9 +1178,8 @@ int storeTypeNames() {
 int turn_based_movement() {
 
     Tile *tile = world[current_tile_y][current_tile_x];
-    struct heap *turn_heap = tile->turn_heap;
     static Character *character;
-    while ((character = (Character *) (heap_remove_min(turn_heap)))) {
+    while ((character = (Character *) (heap_remove_min(&turn_heap)))) {
         if (character->type_enum == PLAYER) {
             interface->clearUI();
             interface->addstrUI("It's your turn! Enter a command or press z for help!\n");
@@ -1432,9 +1432,9 @@ int turn_based_movement() {
         else if (character->type_enum == STATIONARY) {
             character->turn += MINIMUM_TURN;
         }
-        heap_insert(turn_heap, character);
+        heap_insert(&turn_heap, character);
     }
-    heap_delete(turn_heap);
+    heap_delete(&turn_heap);
 
     return 0;
 
@@ -2015,7 +2015,7 @@ int change_tile(int x, int y) {
 //                trainer = heap_remove_min(new_tile->turn_heap);
 //            }
 //        }
-        heap_insert(world[current_tile_y][current_tile_x]->turn_heap, player_character);
+        heap_insert(&turn_heap, player_character);
         return 0;
     }
     else {
@@ -2080,9 +2080,6 @@ Tile create_empty_tile() {
     tile.south_x = -1;
     tile.east_y = -1;
     tile.west_y = -1;
-    struct heap turn_heap;
-    heap_init(&turn_heap, comparator_character_movement, NULL);
-    tile.turn_heap = &turn_heap;
     return tile;
 
 }
@@ -2561,8 +2558,6 @@ int place_building(Tile *tile, Terrain terrain, double chance) {
 
 int place_player_character(Tile *tile) {
 
-    struct heap *turn_heap = tile->turn_heap;
-
     int x;
     int y;
     int found = 0;
@@ -2576,7 +2571,7 @@ int place_player_character(Tile *tile) {
 
     player_character = new Character(x, y, PLAYER, "PLAYER", '@', COLOR_CYAN,
                                      0, 0, 0, 0, 0, 0);
-    heap_insert(turn_heap, player_character);
+    heap_insert(&turn_heap, player_character);
     tile->player_character = (PlayerCharacter *) player_character;
     tile->tile[y][x].character = player_character;
     //create distance tiles
@@ -2641,7 +2636,6 @@ int place_trainers(Tile *tile) {
 
 int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_type, char character) {
 
-    struct heap *turn_heap = tile->turn_heap;
     while (num_trainer > 0) {
         int x;
         int y;
@@ -2692,7 +2686,7 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
                                            COLOR_RED, 0, 0, 0, 0,
                                            0, 0);
         //todo: CRASH: Segmentation fault. Correctly sending pointer.
-        heap_insert(turn_heap, trainer);
+        heap_insert(&turn_heap, trainer);
         tile->tile[y][x].character = trainer;
         num_trainer--;
     }
