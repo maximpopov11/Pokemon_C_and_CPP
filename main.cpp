@@ -115,6 +115,14 @@ public:
     }
 };
 
+static int32_t comparator_trainer_distance_tile(const void *key, const void *with) {
+    return ((Point *) key)->distance - ((Point *) with)->distance;
+}
+
+static int32_t comparator_character_movement(const void *key, const void *with) {
+    return ((Character *) key)->turn - ((Character *) with)->turn;
+}
+
 class Tile {
 public:
     Point tile[TILE_LENGTH_Y][TILE_WIDTH_X];
@@ -135,7 +143,6 @@ public:
         this->east_y = -1;
         this->west_y = -1;
         this->player_character = NULL;
-        this->turn_heap = NULL;
     }
 };
 
@@ -559,14 +566,6 @@ public:
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
 int hiker_distance_tile [TILE_LENGTH_Y][TILE_WIDTH_X];
 
-static int32_t comparator_trainer_distance_tile(const void *key, const void *with) {
-    return ((Point *) key)->distance - ((Point *) with)->distance;
-}
-
-static int32_t comparator_character_movement(const void *key, const void *with) {
-    return ((Character *) key)->turn - ((Character *) with)->turn;
-}
-
 int print_usage();
 int storePokemon();
 int storeMoves();
@@ -700,7 +699,7 @@ int num_trainers;
 int main(int argc, char *argv[]) {
 
     //todo: ASSIGNED: change to Ncurses on submission
-    interface = new Ncurses();
+    interface = new NoNcurses();
 
     //get arguments
 //    int opt = 0;
@@ -744,42 +743,37 @@ int main(int argc, char *argv[]) {
     //todo: ASSIGNED: read from other places first
     if (argc < 2) {
         std::cout << "No arguments provided." << "\n";
-        return 1;
-    }
-    std::string fileName = argv[1];
-    if (fileName == "pokemon") {
-        for (int i = 0; i < (int)allPokemon.size(); i++) {
-            std::cout << allPokemon[i]->toString() << "\n";
-        }
-    }
-    else if (fileName == "moves") {
-        for (int i = 0; i < (int)allMoves.size(); i++) {
-            std::cout << allMoves[i]->toString() << "\n";
-        }
-    }
-    else if (fileName == "pokemon_moves") {
-        for (int i = 0; i < (int)allPokemonMoves.size(); i++) {
-            std::cout << allPokemonMoves[i]->toString() << "\n";
-        }
-    }
-    else if (fileName == "pokemon_species") {
-        for (int i = 0; i < (int)allPokemonSpecies.size(); i++) {
-            std::cout << allPokemonSpecies[i]->toString() << "\n";
-        }
-    }
-    else if (fileName == "experience") {
-        for (int i = 0; i < (int)allExperience.size(); i++) {
-            std::cout << allExperience[i]->toString() << "\n";
-        }
-    }
-    else if (fileName == "type_names") {
-        for (int i = 0; i < (int)allTypeNames.size(); i++) {
-            std::cout << allTypeNames[i]->toString() << "\n";
-        }
     }
     else {
-        std::cout << "Input file name: " << fileName << " is not a valid file" << "\n";
-        return 2;
+        std::string fileName = argv[1];
+        if (fileName == "pokemon") {
+            for (int i = 0; i < (int) allPokemon.size(); i++) {
+                std::cout << allPokemon[i]->toString() << "\n";
+            }
+        } else if (fileName == "moves") {
+            for (int i = 0; i < (int) allMoves.size(); i++) {
+                std::cout << allMoves[i]->toString() << "\n";
+            }
+        } else if (fileName == "pokemon_moves") {
+            for (int i = 0; i < (int) allPokemonMoves.size(); i++) {
+                std::cout << allPokemonMoves[i]->toString() << "\n";
+            }
+        } else if (fileName == "pokemon_species") {
+            for (int i = 0; i < (int) allPokemonSpecies.size(); i++) {
+                std::cout << allPokemonSpecies[i]->toString() << "\n";
+            }
+        } else if (fileName == "experience") {
+            for (int i = 0; i < (int) allExperience.size(); i++) {
+                std::cout << allExperience[i]->toString() << "\n";
+            }
+        } else if (fileName == "type_names") {
+            for (int i = 0; i < (int) allTypeNames.size(); i++) {
+                std::cout << allTypeNames[i]->toString() << "\n";
+            }
+        } else {
+            std::cout << "Input file name: " << fileName << " is not a valid file" << "\n";
+            return 2;
+        }
     }
 
 
@@ -2100,6 +2094,8 @@ int generate_terrain(Tile *tile) {
     const int NUM_FOREST_SEEDS = rand() % 5;
     const int NUM_MOUNTAIN_SEEDS = rand() % 4;
     const int NUM_LAKE_SEEDS = rand() % 3;
+    //todo: BUG: turn heap min breaks (always set to same incorrect data value) on plant_seeds() if it exists and on test() (earlier code) if plant_seeds() is not called
+    //todo: BUG FIX: try making heap global again (move map means remove from heap and readd)
     plant_seeds(tile, *grass, NUM_TALL_GRASS_SEEDS);
     plant_seeds(tile, *clearing, NUM_CLEARING_SEEDS);
     plant_seeds(tile, *forest, NUM_FOREST_SEEDS);
