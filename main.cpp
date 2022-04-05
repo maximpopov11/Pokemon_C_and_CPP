@@ -91,8 +91,6 @@ class NonPlayerCharacter : public Character {
 
 };
 
-//todo: ASSIGNED: constructor for point and tile
-
 class Point {
 public:
     int x;
@@ -562,6 +560,42 @@ public:
     }
 };
 
+class PokemonStat {
+public:
+    int pokemon_id;
+    int stat_id;
+    int base_stat;
+    int effort;
+    std::string pokemonStatString;
+
+    PokemonStat(std::string pokemon_id, std::string stat_id, std::string base_stat, std::string effort) {
+        this->pokemon_id = stoi(pokemon_id);
+        this->stat_id = stoi(stat_id);
+        this->base_stat = stoi(base_stat);
+        this->effort = stoi(effort);
+        pokemonStatString = "";
+        if (this->pokemon_id != -1) {
+            pokemonStatString += pokemon_id;
+        }
+        pokemonStatString += ",";
+        if (this->stat_id != -1) {
+            pokemonStatString += stat_id;
+        }
+        pokemonStatString += ",";
+        if (this->base_stat != -1) {
+            pokemonStatString += base_stat;
+        }
+        pokemonStatString += ",";
+        if (this->effort != -1) {
+            pokemonStatString += effort;
+        }
+    }
+
+    std::string toString() {
+        return pokemonStatString;
+    }
+};
+
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
 int hiker_distance_tile [TILE_LENGTH_Y][TILE_WIDTH_X];
 
@@ -572,6 +606,7 @@ int storePokemonMoves();
 int storePokemonSpecies();
 int storeExperience();
 int storeTypeNames();
+int storePokemonStats();
 //commented due to database info failing to make
 //int printData(std::vector<DatabaseInfo *> dataVector);
 int turn_based_movement();
@@ -689,6 +724,7 @@ std::vector<PokemonMove *> allPokemonMoves;
 std::vector<PokemonSpecies *> allPokemonSpecies;
 std::vector<Experience *> allExperience;
 std::vector<TypeName *> allTypeNames;
+std::vector<PokemonStat *> allPokemonStats;
 Tile *world[WORLD_LENGTH_Y][WORLD_WIDTH_X] = {0};
 int current_tile_x;
 int current_tile_y;
@@ -737,10 +773,9 @@ int main(int argc, char *argv[]) {
     if (storeTypeNames() != 0) {
         std::cout << "File not opened successfully. File: type_names.csv" << "\n";
     }
-
-    //todo: ASSIGNED: store and print all files like Pokemon
-    //todo: ASSIGNED: don't print -1 empty placeholder
-    //todo: ASSIGNED: read from other places first
+    if (storePokemonStats() != 0) {
+        std::cout << "File not opened successfully. File: pokemon_stats.csv" << "\n";
+    }
     if (argc < 2) {
         std::cout << "No arguments provided." << "\n";
     }
@@ -769,6 +804,10 @@ int main(int argc, char *argv[]) {
         } else if (fileName == "type_names") {
             for (int i = 0; i < (int) allTypeNames.size(); i++) {
                 std::cout << allTypeNames[i]->toString() << "\n";
+            }
+        } else if (fileName == "pokemon_stats") {
+            for (int i = 0; i < (int) allPokemonStats.size(); i++) {
+                std::cout << allPokemonStats[i]->toString() << "\n";
             }
         } else {
             std::cout << "Input file name: " << fileName << " is not a valid file" << "\n";
@@ -1152,6 +1191,42 @@ int storeTypeNames() {
             }
             TypeName *typeName = new TypeName(type_id, local_language_id, name);
             allTypeNames.push_back(typeName);
+        }
+    }
+    else {
+        //file not opened successfully
+        return 1;
+    }
+
+    return 0;
+
+}
+
+int storePokemonStats() {
+
+    std::ifstream file;
+    file.open("pokedex/pokedex/data/csv/pokemon_stats.csv");
+    if (file.is_open()) {
+        std::string pokemon_id, stat_id, base_stat, effort;
+        getline(file, pokemon_id, '\n');
+        while(getline(file, pokemon_id, ',')) {
+            getline(file, stat_id, ',');
+            getline(file, base_stat, ',');
+            getline(file, effort, '\n');
+            if (pokemon_id == "") {
+                pokemon_id = "-1";
+            }
+            if (stat_id == "") {
+                stat_id = "-1";
+            }
+            if (base_stat == "") {
+                base_stat = "-1";
+            }
+            if (effort == "") {
+                effort = "-1";
+            }
+            PokemonStat *stat = new PokemonStat(pokemon_id, stat_id, base_stat, effort);
+            allPokemonStats.push_back(stat);
         }
     }
     else {
@@ -1989,7 +2064,7 @@ int enter_mart() {
 
 int change_tile(int x, int y) {
 
-    //todo: RUN ASSIGNED: upon entering map set all trainers there to same heap time as PC
+    //todo: BUG: remove trainers and add new trainers with time = player time to heap upon changing tile. Code is currently commented in change_tile function.
     //todo: RUN BUG TEST: test moving onto new Tile with large game time for trainers time being updated correctly
     if (x >= 0 && x < WORLD_WIDTH_X && y >= 0 && y < WORLD_LENGTH_Y) {
         if (world[y][x] == NULL) {
@@ -2005,7 +2080,6 @@ int change_tile(int x, int y) {
         //set all characters in heap to same turn value as PC
         //todo: RUN BUG: moving between tiles sometimes crashes
         //todo: RUN BUG: upon re-entering ORIGINAL map (but not other maps) post leaving it, trainers never move
-        //todo: RUN BUG: heap insert crash: fix with 1 global heap and remove/re-add trainers (with time update) upon changing maps
         //todo: RUN BUG TEST: uncomment below once heap crash insert bug fixed
 //        if (new_tile->turn_heap->size > 0) {
 //            NonPlayerCharacter *trainer = heap_remove_min(new_tile->turn_heap);
@@ -2091,8 +2165,6 @@ int generate_terrain(Tile *tile) {
     const int NUM_FOREST_SEEDS = rand() % 5;
     const int NUM_MOUNTAIN_SEEDS = rand() % 4;
     const int NUM_LAKE_SEEDS = rand() % 3;
-    //todo: BUG: turn heap min breaks (always set to same incorrect data value) on plant_seeds() if it exists and on test() (earlier code) if plant_seeds() is not called
-    //todo: BUG FIX: try making heap global again (move map means remove from heap and readd)
     plant_seeds(tile, *grass, NUM_TALL_GRASS_SEEDS);
     plant_seeds(tile, *clearing, NUM_CLEARING_SEEDS);
     plant_seeds(tile, *forest, NUM_FOREST_SEEDS);
@@ -2571,9 +2643,9 @@ int place_player_character(Tile *tile) {
 
     player_character = new Character(x, y, PLAYER, "PLAYER", '@', COLOR_CYAN,
                                      0, 0, 0, 0, 0, 0);
-    heap_insert(&turn_heap, player_character);
     tile->player_character = (PlayerCharacter *) player_character;
     tile->tile[y][x].character = player_character;
+    heap_insert(&turn_heap, player_character);
     //create distance tiles
     dijkstra(tile, RIVAL);
     dijkstra(tile, HIKER);
@@ -2685,7 +2757,6 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
         Character *trainer = new Character(x, y, trainer_type, type_string, character,
                                            COLOR_RED, 0, 0, 0, 0,
                                            0, 0);
-        //todo: CRASH: Segmentation fault. Correctly sending pointer.
         heap_insert(&turn_heap, trainer);
         tile->tile[y][x].character = trainer;
         num_trainer--;
@@ -2728,7 +2799,8 @@ int dijkstra(Tile *tile, enum character_type trainer_type) {
             }
         }
     }
-    while ((point = (Point*) (&heap))) {
+    //todo: BUG: crashes on heap remove min after some number of iterations. Usually when crashing heap size is around 800 to 1100
+    while ((point = (Point *) heap_remove_min(&heap))) {
         point->heap_node = NULL;
         for (int y = -1; y <= 1; y++) {
             for (int x = -1; x <= 1; x++) {
