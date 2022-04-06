@@ -597,7 +597,21 @@ public:
 
 class Pokemon {
 public:
+    PokemonInfo pokemonInfo;
+    int health;
+    int attack;
+    int defense;
+    int speed;
+    int special_attack;
+    int special_defense;
+    int level;
+    Move *move1 = NULL;
+    Move *move2 = NULL;
 
+    Pokemon(PokemonInfo pokemonInfo, int health, int attack, int defense, int speed, int special_attack,
+                int special_defense, int level, Move *move1, Move *move2) : pokemonInfo(pokemonInfo), health(health),
+                attack(attack), defense(defense), speed(speed), special_attack(special_attack),
+                special_defense(special_defense), level(level), move1(move1), move2(move2) {}
 };
 
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
@@ -617,8 +631,8 @@ int turn_based_movement();
 int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
 int combat_trainer(Character *from_character, Character *to_character);
-Pokemon create_pokemon();
-int combat_pokemon(Pokemon pokemon);
+Pokemon * create_pokemon();
+int combat_pokemon(Pokemon *pokemon);
 int enter_center();
 int enter_mart();
 int change_tile(int x, int y);
@@ -724,7 +738,7 @@ public:
 };
 
 UserInterface *interface;
-std::vector<PokemonInfo *> allPokemon;
+std::vector<PokemonInfo *> allPokemonInfo;
 std::vector<Move *> allMoves;
 std::vector<PokemonMove *> allPokemonMoves;
 std::vector<PokemonSpecies *> allPokemonSpecies;
@@ -788,8 +802,8 @@ int main(int argc, char *argv[]) {
     else {
         std::string fileName = argv[1];
         if (fileName == "pokemon") {
-            for (int i = 0; i < (int) allPokemon.size(); i++) {
-                std::cout << allPokemon[i]->toString() << "\n";
+            for (int i = 0; i < (int) allPokemonInfo.size(); i++) {
+                std::cout << allPokemonInfo[i]->toString() << "\n";
             }
         } else if (fileName == "moves") {
             for (int i = 0; i < (int) allMoves.size(); i++) {
@@ -897,7 +911,7 @@ int storePokemon() {
                 is_default = "-1";
             }
             PokemonInfo *pokemon = new PokemonInfo(id, name, species_id, height, weight, base_experience, order, is_default);
-            allPokemon.push_back(pokemon);
+            allPokemonInfo.push_back(pokemon);
         }
     }
     else {
@@ -1248,7 +1262,7 @@ int storePokemonStats() {
 //Print any data type to follow DRY principle
 //int printData(std::vector<DatabaseInfo *> dataVector) {
 //
-//    for (int i = 0; i < (int)allPokemon.size(); i++) {
+//    for (int i = 0; i < (int)allPokemonInfo.size(); i++) {
 //        std::cout << dataVector[i]->toString() << "\n";
 //    }
 //
@@ -2010,8 +2024,7 @@ int move_character(int x, int y, int new_x, int new_y) {
     //else if moving into tall grass
     else if (point.terrain.id == grass->id) {
         if (rand() % INVERSE_POKEMON_ENCOUNTER_CHANCE == 0) {
-            //todo: ASSIGNED: increase based off of Manhattan distance
-            Pokemon pokemon = create_pokemon();
+            Pokemon *pokemon = create_pokemon();
             combat_pokemon(pokemon);
         }
     }
@@ -2055,13 +2068,41 @@ int combat_trainer(Character *from_character, Character *to_character) {
 
 }
 
-Pokemon create_pokemon() {
+Pokemon * create_pokemon() {
 
-    //todo: ASSIGNED: create pokemon and save it in scope of this if
+    PokemonInfo pokemonInfo = *allPokemonInfo[rand() & allPokemonInfo.size()];
+    int health = rand() % 16;
+    int attack = rand() % 16;
+    int defense = rand() % 16;
+    int speed = rand() % 16;
+    int special_attack = rand() % 16;
+    int special_defense = rand() % 16;
+    double distanceDouble = distance(current_tile_x, current_tile_y, 199, 199);
+    int distance = trunc(distanceDouble);
+    int minLevel;
+    int maxLevel;
+    if (distance <= 200) {
+        minLevel = 1;
+        maxLevel = distance/2;
+    }
+    else {
+        minLevel = (distance - 200)/2;
+        if (minLevel < 1) {
+            minLevel = 1;
+        }
+        maxLevel = 100;
+    }
+    int level = minLevel + rand() % (maxLevel - minLevel);
+    //todo: ASSIGNED: give pokemon moves
+    Move *move1 = NULL;
+    Move *move2 = NULL;
+
+    return new Pokemon(pokemonInfo, health, attack, defense, speed, special_attack, special_defense, level,
+                                  move1, move2);
 
 }
 
-int combat_pokemon(Pokemon pokemon) {
+int combat_pokemon(Pokemon *pokemon) {
 
     //todo: ASSIGNED: enter pokemon battle and print pokemon info
 
