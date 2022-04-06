@@ -21,6 +21,7 @@
 #define MINIMUM_TURN 5
 //77 = minimum number of paths in Tile - 1 for PC so all trainers can be placed
 #define MAX_NUM_TRAINERS 77
+#define INVERSE_POKEMON_ENCOUNTER_CHANCE 10
 
 //Author Maxim Popov
 enum character_type {
@@ -149,9 +150,7 @@ public:
 //    virtual std::string toString();
 //};
 
-//commented due to DatabaseInfo failing to make
-//class Pokemon : public DatabaseInfo {
-class Pokemon {
+class PokemonInfo {
 public:
     int id;
     std::string name;
@@ -163,8 +162,8 @@ public:
     int is_default;
     std::string pokemonString;
 
-    Pokemon(std::string id, std::string name, std::string species_id, std::string height, std::string weight,
-            std::string base_experience, std::string order, std::string is_default) :
+    PokemonInfo(std::string id, std::string name, std::string species_id, std::string height, std::string weight,
+                std::string base_experience, std::string order, std::string is_default) :
         id(stoi(id)), name(name), species_id(stoi(species_id)), height(stoi(height)), weight(stoi(weight)),
         base_experience(stoi(base_experience)), order(stoi(order)), is_default(stoi(is_default)) {
         pokemonString = "";
@@ -596,6 +595,11 @@ public:
     }
 };
 
+class Pokemon {
+public:
+
+};
+
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
 int hiker_distance_tile [TILE_LENGTH_Y][TILE_WIDTH_X];
 
@@ -612,7 +616,9 @@ int storePokemonStats();
 int turn_based_movement();
 int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
-int combat(Character *from_character, Character *to_character);
+int combat_trainer(Character *from_character, Character *to_character);
+Pokemon create_pokemon();
+int combat_pokemon(Pokemon pokemon);
 int enter_center();
 int enter_mart();
 int change_tile(int x, int y);
@@ -718,7 +724,7 @@ public:
 };
 
 UserInterface *interface;
-std::vector<Pokemon *> allPokemon;
+std::vector<PokemonInfo *> allPokemon;
 std::vector<Move *> allMoves;
 std::vector<PokemonMove *> allPokemonMoves;
 std::vector<PokemonSpecies *> allPokemonSpecies;
@@ -890,7 +896,7 @@ int storePokemon() {
             if (is_default == "") {
                 is_default = "-1";
             }
-            Pokemon *pokemon = new Pokemon(id, name, species_id, height, weight, base_experience, order, is_default);
+            PokemonInfo *pokemon = new PokemonInfo(id, name, species_id, height, weight, base_experience, order, is_default);
             allPokemon.push_back(pokemon);
         }
     }
@@ -1980,24 +1986,33 @@ int player_turn() {
 int move_character(int x, int y, int new_x, int new_y) {
 
     Tile *tile = world[current_tile_y][current_tile_x];
+    Point point = tile->tile[new_y][new_x];
     Character *from_character = tile->tile[y][x].character;
     Character *to_character = tile->tile[new_y][new_x].character;
-    //if moving onto PC
+    //if moving onto character
     if (to_character != NULL) {
-        //pc-trainer combat instigated by either party
+        //pc-trainer combat_trainer instigated by either party
         if (from_character->type_enum == PLAYER || to_character->type_enum == PLAYER) {
             if (from_character->type_enum == PLAYER && to_character->defeated == 1) {
                 //PC should not be allowed to move to a defeated trainer's location (as of assignment 1.05)
                 return 2;
             }
             else {
-                combat(from_character, to_character);
+                combat_trainer(from_character, to_character);
             }
         }
             //trainer -> trainer = no move
         else {
             //this should never happen because this is checked in turn_based_movement in trainer movement
             return 1;
+        }
+    }
+    //else if moving into tall grass
+    else if (point.terrain.id == grass->id) {
+        if (rand() % INVERSE_POKEMON_ENCOUNTER_CHANCE == 0) {
+            //todo: ASSIGNED: increase based off of Manhattan distance
+            Pokemon pokemon = create_pokemon();
+            combat_pokemon(pokemon);
         }
     }
     else {
@@ -2011,7 +2026,7 @@ int move_character(int x, int y, int new_x, int new_y) {
 
 }
 
-int combat(Character *from_character, Character *to_character) {
+int combat_trainer(Character *from_character, Character *to_character) {
 
     if (from_character->type_enum == PLAYER) {
         //player attacks trainer
@@ -2036,6 +2051,20 @@ int combat(Character *from_character, Character *to_character) {
         interface->addstrUI("Invalid command. Press press escape to stop your victory dance after defeating that trainer.\n");
         interface->refreshUI();
     }
+    return 0;
+
+}
+
+Pokemon create_pokemon() {
+
+    //todo: ASSIGNED: create pokemon and save it in scope of this if
+
+}
+
+int combat_pokemon(Pokemon pokemon) {
+
+    //todo: ASSIGNED: enter pokemon battle and print pokemon info
+
     return 0;
 
 }
@@ -2768,63 +2797,11 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
 
 int dijkstra(Tile *tile, enum character_type trainer_type) {
 
-    int start_x = tile->player_character->x;
-    int start_y =tile->player_character->y;
-
     for (int y = 0; y < TILE_LENGTH_Y; y++) {
         for (int x = 0; x < TILE_WIDTH_X; x++) {
             tile->tile[y][x].distance = INT_MAX;
         }
     }
-    tile->tile[start_y][start_x].distance = 0;
-
-    struct heap heap;
-    static Point *point;
-    heap_init(&heap, comparator_trainer_distance_tile, NULL);
-    for (int y = 0; y < TILE_LENGTH_Y; y++) {
-        for (int x = 0; x < TILE_WIDTH_X; x++) {
-            int weight;
-            if (trainer_type == RIVAL) {
-                weight = tile->tile[y][x].terrain.rival_weight;
-            }
-            else {
-                //character_type type_enum == hiker
-                weight = tile->tile[y][x].terrain.hiker_weight;
-            }
-            if (weight != INT_MAX) {
-                tile->tile[y][x].heap_node = heap_insert(&heap, &tile->tile[y][x]);
-            }
-            else {
-                tile->tile[y][x].heap_node = NULL;
-            }
-        }
-    }
-    //todo: BUG: crashes on heap remove min after some number of iterations. Usually when crashing heap size is around 800 to 1100
-    while ((point = (Point *) heap_remove_min(&heap))) {
-        point->heap_node = NULL;
-        for (int y = -1; y <= 1; y++) {
-            for (int x = -1; x <= 1; x++) {
-                if (point->y + y >= 0 && point->y + y < TILE_LENGTH_Y && point->x + x >= 0 && point->x + x < TILE_WIDTH_X)
-                {
-                    Point *neighbor = &(tile->tile[point->y + y][point->x + x]);
-                    int candidate_distance;
-                    if (trainer_type == RIVAL) {
-                        candidate_distance = point->distance + neighbor->terrain.rival_weight;
-                    } else {
-                        //character_type type_enum == hiker
-                        candidate_distance = point->distance + neighbor->terrain.hiker_weight;
-                    }
-                    if (neighbor->heap_node != NULL && candidate_distance < neighbor->distance &&
-                        candidate_distance > 0) {
-                        neighbor->distance = candidate_distance;
-                        heap_decrease_key_no_replace(&heap, neighbor->heap_node);
-                    }
-                }
-            }
-        }
-    }
-    heap_delete(&heap);
-
     //updates appropriate trainer distance Tile for the data to endure through future dijkstra calls
     for (int i = 0; i < TILE_LENGTH_Y; i++) {
         for (int j = 0; j < TILE_WIDTH_X; j++) {
@@ -2837,6 +2814,77 @@ int dijkstra(Tile *tile, enum character_type trainer_type) {
             }
         }
     }
+
+    //todo: BUG: uncomment code below and debug. Currently replaced by all points distance set to int max = no trainer movement.
+//    int start_x = tile->player_character->x;
+//    int start_y =tile->player_character->y;
+//
+//    for (int y = 0; y < TILE_LENGTH_Y; y++) {
+//        for (int x = 0; x < TILE_WIDTH_X; x++) {
+//            tile->tile[y][x].distance = INT_MAX;
+//        }
+//    }
+//    tile->tile[start_y][start_x].distance = 0;
+//
+//    struct heap heap;
+//    static Point *point;
+//    heap_init(&heap, comparator_trainer_distance_tile, NULL);
+//    for (int y = 0; y < TILE_LENGTH_Y; y++) {
+//        for (int x = 0; x < TILE_WIDTH_X; x++) {
+//            int weight;
+//            if (trainer_type == RIVAL) {
+//                weight = tile->tile[y][x].terrain.rival_weight;
+//            }
+//            else {
+//                //character_type type_enum == hiker
+//                weight = tile->tile[y][x].terrain.hiker_weight;
+//            }
+//            if (weight != INT_MAX) {
+//                tile->tile[y][x].heap_node = heap_insert(&heap, &(tile->tile[y][x]));
+//            }
+//            else {
+//                tile->tile[y][x].heap_node = NULL;
+//            }
+//        }
+//    }
+//    //todo: BUG: crashes on heap remove min in heap restructuring after some number of iterations. Usually when crashing heap size is around 800 to 1100
+//    while ((point = (Point *) heap_remove_min(&heap))) {
+//        point->heap_node = NULL;
+//        for (int y = -1; y <= 1; y++) {
+//            for (int x = -1; x <= 1; x++) {
+//                if (point->y + y >= 0 && point->y + y < TILE_LENGTH_Y && point->x + x >= 0 && point->x + x < TILE_WIDTH_X)
+//                {
+//                    Point *neighbor = &(tile->tile[point->y + y][point->x + x]);
+//                    int candidate_distance;
+//                    if (trainer_type == RIVAL) {
+//                        candidate_distance = point->distance + neighbor->terrain.rival_weight;
+//                    } else {
+//                        //character_type type_enum == hiker
+//                        candidate_distance = point->distance + neighbor->terrain.hiker_weight;
+//                    }
+//                    if (neighbor->heap_node != NULL && candidate_distance < neighbor->distance &&
+//                        candidate_distance > 0) {
+//                        neighbor->distance = candidate_distance;
+//                        heap_decrease_key_no_replace(&heap, neighbor->heap_node);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//    heap_delete(&heap);
+//
+//    //updates appropriate trainer distance Tile for the data to endure through future dijkstra calls
+//    for (int i = 0; i < TILE_LENGTH_Y; i++) {
+//        for (int j = 0; j < TILE_WIDTH_X; j++) {
+//            if (trainer_type == RIVAL) {
+//                rival_distance_tile[i][j] = tile->tile[i][j].distance;
+//            }
+//            else {
+//                //printable_character type_enum = hiker
+//                hiker_distance_tile[i][j] = tile->tile[i][j].distance;
+//            }
+//        }
+//    }
 
     return 0;
 
