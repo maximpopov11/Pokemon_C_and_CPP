@@ -597,21 +597,56 @@ public:
 
 class Pokemon {
 public:
-    PokemonInfo pokemonInfo;
-    int health;
-    int attack;
-    int defense;
-    int speed;
-    int special_attack;
-    int special_defense;
+    PokemonInfo *pokemonInfo;
+    int base_health;
+    int base_attack;
+    int base_defense;
+    int base_special_attack;
+    int base_special_defense;
+    int base_speed;
+    int health_iv = rand() % 16;
+    int attack_iv = rand() % 16;
+    int defense_iv = rand() % 16;
+    int special_attack_iv = rand() % 16;
+    int special_defense_iv = rand() % 16;
+    int speed_iv = rand() % 16;
     int level;
     Move *move1 = NULL;
     Move *move2 = NULL;
+    bool male;
+    bool shiny;
 
-    Pokemon(PokemonInfo pokemonInfo, int health, int attack, int defense, int speed, int special_attack,
-                int special_defense, int level, Move *move1, Move *move2) : pokemonInfo(pokemonInfo), health(health),
-                attack(attack), defense(defense), speed(speed), special_attack(special_attack),
-                special_defense(special_defense), level(level), move1(move1), move2(move2) {}
+    Pokemon(PokemonInfo *pokemonInfo, int base_health, int base_attack, int base_defense, int base_speed,
+            int base_special_attack, int base_special_defense, int level, Move *move1, Move *move2, bool male,
+            bool shiny) :
+            pokemonInfo(pokemonInfo), base_health(base_health), base_attack(base_attack), base_defense(base_defense),
+            base_speed(base_speed), base_special_attack(base_special_attack), base_special_defense(base_special_defense),
+            level(level), move1(move1), move2(move2), male(male), shiny(shiny) {}
+
+    int getHealth() {
+        return ((base_health + health_iv) * 2 * level) / 100 + level + 10;
+    }
+
+    int getAttack() {
+        return ((base_attack + attack_iv) * 2 * level) / 100 + 5;
+    }
+
+    int getDefense() {
+        return ((base_defense + defense_iv) * 2 * level) / 100 + 5;
+    }
+
+    int getSpecialAttack() {
+        return ((base_special_attack + special_attack_iv) * 2 * level) / 100 + 5;
+    }
+
+    int getSpecialDefense() {
+        return ((base_special_defense + special_defense_iv) * 2 * level) / 100 + 5;
+    }
+
+    int getSpeed() {
+        return ((base_speed + speed_iv) * 2 * level) / 100 + 5;
+    }
+
 };
 
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
@@ -2070,20 +2105,17 @@ int combat_trainer(Character *from_character, Character *to_character) {
 
 Pokemon * create_pokemon() {
 
-    PokemonInfo pokemonInfo = *allPokemonInfo[rand() & allPokemonInfo.size()];
-    int health = rand() % 16;
-    int attack = rand() % 16;
-    int defense = rand() % 16;
-    int speed = rand() % 16;
-    int special_attack = rand() % 16;
-    int special_defense = rand() % 16;
-    double distanceDouble = distance(current_tile_x, current_tile_y, 199, 199);
+    PokemonInfo *pokemonInfo = allPokemonInfo[rand() % allPokemonInfo.size()];
+    double distanceDouble = distance(current_tile_x, current_tile_y, WORLD_CENTER_X, WORLD_CENTER_Y);
     int distance = trunc(distanceDouble);
     int minLevel;
     int maxLevel;
     if (distance <= 200) {
         minLevel = 1;
         maxLevel = distance/2;
+        if (maxLevel < 1) {
+            maxLevel = 1;
+        }
     }
     else {
         minLevel = (distance - 200)/2;
@@ -2093,18 +2125,111 @@ Pokemon * create_pokemon() {
         maxLevel = 100;
     }
     int level = minLevel + rand() % (maxLevel - minLevel);
-    //todo: ASSIGNED: give pokemon moves
+    PokemonMove *pokemonMove = allPokemonMoves[0];
+    int found = 0;
+    while (found = 0) {
+        pokemonMove = allPokemonMoves[rand() % allPokemonMoves.size()];
+        if (pokemonMove->pokemon_id == pokemonInfo->species_id && pokemonMove->pokemon_move_method_id == 1) {
+            found = 1;
+        }
+    }
+    int base_health;
+    int base_attack;
+    int base_defense;
+    int base_speed;
+    int base_special_attack;
+    int base_special_defense;
+    for (int i = 0; i < allPokemonStats.size(); i += 6) {
+        if (allPokemonStats[i]->pokemon_id = pokemonInfo->id) {
+            base_health = allPokemonStats[i]->base_stat;
+            base_attack = allPokemonStats[i + 1]->base_stat;
+            base_defense = allPokemonStats[i + 2]->base_stat;
+            base_speed = allPokemonStats[i + 3]->base_stat;
+            base_special_attack = allPokemonStats[i + 4]->base_stat;
+            base_special_defense = allPokemonStats[i + 5]->base_stat;
+            break;
+        }
+    }
+    std::vector<Move *> legalMoves;
+    for (int i = 0; i < allMoves.size(); i++) {
+        if (allMoves[i]->id == pokemonMove->move_id) {
+            legalMoves.push_back(allMoves[i]);
+        }
+    }
     Move *move1 = NULL;
     Move *move2 = NULL;
+    if (legalMoves.size() == 1) {
+        move1 = legalMoves[0];
+    }
+    else {
+        move1 = legalMoves[rand() % legalMoves.size()];
+        move2 = legalMoves[rand() % legalMoves.size()];
+        while (move2 == move1) {
+            move2 = legalMoves[rand() % legalMoves.size()];
+        }
+    }
+    bool male = rand() % 2;
+    bool shiny = false;
+    if (rand() % 8192 == 0) {
+        shiny = true;
+    }
 
-    return new Pokemon(pokemonInfo, health, attack, defense, speed, special_attack, special_defense, level,
-                                  move1, move2);
+    return new Pokemon(pokemonInfo, base_health, base_attack, base_defense, base_speed, base_special_attack,
+                       base_special_defense, level, move1, move2, male, shiny);
 
 }
 
 int combat_pokemon(Pokemon *pokemon) {
 
-    //todo: ASSIGNED: enter pokemon battle and print pokemon info
+    //todo: ASSIGNED: check piazza question 435 for pokemon values and nice formatting of battle screen
+
+    interface->clearUI();
+    interface->addstrUI("A wild pokemon has appeared! Press esc to leave.");
+    interface->addstrUI("\n");
+    interface->addstrUI("Level ");
+    interface->addstrUI(std::to_string(pokemon->level).c_str());
+    interface->addstrUI(" ");
+    interface->addstrUI(pokemon->pokemonInfo->name.c_str());
+    interface->addstrUI("\n");
+    interface->addstrUI("Known Moves:");
+    interface->addstrUI("\n");
+    interface->addstrUI(pokemon->move1->name.c_str());
+    interface->addstrUI("\n");
+    if (pokemon->move2 != NULL) {
+        interface->addstrUI(pokemon->move2->name.c_str());
+        interface->addstrUI("\n");
+    }
+    interface->addstrUI("Stats:\tHP\tAttack\tDefense\tS.Attack\tS.Defense\tSpeed");
+    interface->addstrUI("\n");
+    interface->addstrUI(std::to_string(pokemon->getHealth()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon->getAttack()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon->getDefense()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon->getSpecialAttack()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon->getSpecialDefense()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon->getSpeed()).c_str());
+    interface->addstrUI("\n");
+    interface->addstrUI("Gender: ");
+    if (pokemon->male) {
+        interface->addstrUI("Male");
+    }
+    else {
+        interface->addstrUI("Female");
+    }
+    interface->addstrUI("\n");
+    interface->addstrUI("Shiny: ");
+    if (pokemon->shiny) {
+        interface->addstrUI("Yes");
+    }
+    else {
+        interface->addstrUI("No");
+    }
+    interface->refreshUI();
+    while (getch() != 27) {}
 
     return 0;
 
