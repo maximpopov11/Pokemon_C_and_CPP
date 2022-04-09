@@ -791,7 +791,7 @@ struct heap turn_heap;
 int main(int argc, char *argv[]) {
 
     //todo: ASSIGNED: change to Ncurses on submission
-    interface = new Ncurses();
+    interface = new NoNcurses();
 
     //get arguments
 //    int opt = 0;
@@ -2960,6 +2960,16 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
         Character *trainer = new Character(x, y, trainer_type, type_string, character,
                                            COLOR_RED, 0, 0, 0, 0,
                                            0, 0);
+        trainer->pokemon.push_back(create_pokemon());
+        //60% chance for trainer to get another pokemon if just got a pokemon, up to 6
+        for (int i = 0; i < 5; i++) {
+            if (rand() % 10 < 6) {
+                trainer->pokemon.push_back(create_pokemon());
+            }
+            else {
+                break;
+            }
+        }
         heap_insert(&turn_heap, trainer);
         tile->tile[y][x].character = trainer;
         num_trainer--;
