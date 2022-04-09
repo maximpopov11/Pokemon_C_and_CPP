@@ -773,6 +773,9 @@ public:
     void attroffUI(int i) {}
 };
 
+//todo: ASSIGNED: set filePath to main file location ("." doesn't work)
+//todo: ASSIGNED: set file path to "" pre submission
+std::string filePath = "/Users/maximpopov/CLionProjects/Pokemon_C_and_CPP/";
 UserInterface *interface;
 std::vector<PokemonInfo *> allPokemonInfo;
 std::vector<Move *> allMoves;
@@ -910,7 +913,7 @@ int print_usage() {
 int storePokemon() {
 
     std::ifstream file;
-    file.open("pokedex/pokedex/data/csv/pokemon.csv");
+    file.open(filePath + "pokedex/pokedex/data/csv/pokemon.csv");
     if (file.is_open()) {
         std:: string id, name, species_id, height, weight, base_experience, order, is_default;
         getline(file, id, '\n');
@@ -962,7 +965,7 @@ int storePokemon() {
 int storeMoves() {
 
     std::ifstream file;
-    file.open("pokedex/pokedex/data/csv/moves.csv");
+    file.open(filePath + "pokedex/pokedex/data/csv/moves.csv");
     if (file.is_open()) {
         std:: string id, name, generation_id, type_id, power, pp, accuracy, priority, target_id, damage_class_id, effect_id,
                 effect_chance, contest_type_id, contest_effect_id, super_contest_effect_id;
@@ -1044,7 +1047,7 @@ int storeMoves() {
 int storePokemonMoves() {
 
     std::ifstream file;
-    file.open("pokedex/pokedex/data/csv/pokemon_moves.csv");
+    file.open(filePath + "pokedex/pokedex/data/csv/pokemon_moves.csv");
     if (file.is_open()) {
         std:: string pokemon_id, version_group_id, move_id, pokemon_move_method_id, level, order;
         getline(file, pokemon_id, '\n');
@@ -1089,7 +1092,7 @@ int storePokemonMoves() {
 int storePokemonSpecies() {
 
     std::ifstream file;
-    file.open("pokedex/pokedex/data/csv/pokemon_species.csv");
+    file.open(filePath + "pokedex/pokedex/data/csv/pokemon_species.csv");
     if (file.is_open()) {
         std:: string id, identifier, generation_id, evolves_from_species_id, evolution_chain_id, color_id, shape_id,
             habitat_id, gender_rate, capture_rate, base_happiness, is_baby, hatch_counter, has_gender_differences,
@@ -1197,7 +1200,7 @@ int storePokemonSpecies() {
 int storeExperience() {
 
     std::ifstream file;
-    file.open("pokedex/pokedex/data/csv/experience.csv");
+    file.open(filePath + "pokedex/pokedex/data/csv/experience.csv");
     if (file.is_open()) {
         std::string growth_rate_id, level, experience;
         getline(file, growth_rate_id, '\n');
@@ -1229,7 +1232,7 @@ int storeExperience() {
 int storeTypeNames() {
 
     std::ifstream file;
-    file.open("pokedex/pokedex/data/csv/type_names.csv");
+    file.open(filePath + "pokedex/pokedex/data/csv/type_names.csv");
     if (file.is_open()) {
         std::string type_id, local_language_id, name;
         getline(file, type_id, '\n');
@@ -1261,7 +1264,7 @@ int storeTypeNames() {
 int storePokemonStats() {
 
     std::ifstream file;
-    file.open("pokedex/pokedex/data/csv/pokemon_stats.csv");
+    file.open(filePath + "pokedex/pokedex/data/csv/pokemon_stats.csv");
     if (file.is_open()) {
         std::string pokemon_id, stat_id, base_stat, effort;
         getline(file, pokemon_id, '\n');
