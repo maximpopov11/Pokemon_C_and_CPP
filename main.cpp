@@ -62,88 +62,6 @@ static Terrain *path = new Terrain(7, '#', 0, 5, 5, 5, COLOR_YELLOW);
 static Terrain *center = new Terrain(8, 'C', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA);
 static Terrain *mart = new Terrain(9, 'M', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA);
 
-class Character {
-public:
-    int x;
-    int y;
-    enum character_type type_enum;
-    std::string type_string;
-    char printable_character;
-    short color;
-    int turn;
-    int direction_set;
-    int x_direction;
-    int y_direction;
-    int in_building;
-    int defeated;
-
-    Character(int x, int y, enum  character_type type_enum, std::string type_string, char printable_character, short color,
-            int turn, int direction_set, int x_direction, int y_direction, int in_building, int defeated) : x(x), y(y),
-            type_enum(type_enum), type_string(type_string), printable_character(printable_character), color(color),
-            turn(turn), direction_set(direction_set), x_direction(x_direction), y_direction(y_direction),
-            in_building(in_building), defeated(defeated) {}
-};
-
-class PlayerCharacter : public Character {
-
-};
-
-class NonPlayerCharacter : public Character {
-
-};
-
-class Point {
-public:
-    int x;
-    int y;
-    Terrain terrain;
-    //for looped non-queue plant_seeds growth
-    Terrain grow_into;
-    Character *character;
-    int distance;
-    heap_node_t *heap_node;
-
-    Point() {
-        this->x = -1;
-        this->y = -1;
-        this->terrain = *none;
-        this->grow_into = *none;
-        this->character = NULL;
-        this->distance = INT_MAX;
-        this->heap_node = NULL;
-    }
-};
-
-static int32_t comparator_trainer_distance_tile(const void *key, const void *with) {
-    return ((Point *) key)->distance - ((Point *) with)->distance;
-}
-
-static int32_t comparator_character_movement(const void *key, const void *with) {
-    return ((Character *) key)->turn - ((Character *) with)->turn;
-}
-
-class Tile {
-public:
-    Point tile[TILE_LENGTH_Y][TILE_WIDTH_X];
-    int x;
-    int y;
-    int north_x;
-    int south_x;
-    int east_y;
-    int west_y;
-    PlayerCharacter *player_character;
-
-    Tile() {
-        this->x = -1;
-        this->y = -1;
-        this->north_x = -1;
-        this->south_x = -1;
-        this->east_y = -1;
-        this->west_y = -1;
-        this->player_character = NULL;
-    }
-};
-
 //commented due to failing make
 //class DatabaseInfo {
 //public:
@@ -649,6 +567,89 @@ public:
 
 };
 
+class Character {
+public:
+    int x;
+    int y;
+    enum character_type type_enum;
+    std::string type_string;
+    char printable_character;
+    short color;
+    int turn;
+    int direction_set;
+    int x_direction;
+    int y_direction;
+    int in_building;
+    int defeated;
+    std::vector<Pokemon *> pokemon;
+
+    Character(int x, int y, enum  character_type type_enum, std::string type_string, char printable_character, short color,
+              int turn, int direction_set, int x_direction, int y_direction, int in_building, int defeated) : x(x), y(y),
+              type_enum(type_enum), type_string(type_string), printable_character(printable_character), color(color),
+              turn(turn), direction_set(direction_set), x_direction(x_direction), y_direction(y_direction),
+              in_building(in_building), defeated(defeated) {}
+};
+
+class PlayerCharacter : public Character {
+
+};
+
+class NonPlayerCharacter : public Character {
+
+};
+
+class Point {
+public:
+    int x;
+    int y;
+    Terrain terrain;
+    //for looped non-queue plant_seeds growth
+    Terrain grow_into;
+    Character *character;
+    int distance;
+    heap_node_t *heap_node;
+
+    Point() {
+        this->x = -1;
+        this->y = -1;
+        this->terrain = *none;
+        this->grow_into = *none;
+        this->character = NULL;
+        this->distance = INT_MAX;
+        this->heap_node = NULL;
+    }
+};
+
+static int32_t comparator_trainer_distance_tile(const void *key, const void *with) {
+    return ((Point *) key)->distance - ((Point *) with)->distance;
+}
+
+static int32_t comparator_character_movement(const void *key, const void *with) {
+    return ((Character *) key)->turn - ((Character *) with)->turn;
+}
+
+class Tile {
+public:
+    Point tile[TILE_LENGTH_Y][TILE_WIDTH_X];
+    int x;
+    int y;
+    int north_x;
+    int south_x;
+    int east_y;
+    int west_y;
+    PlayerCharacter *player_character;
+
+    Tile() {
+        this->x = -1;
+        this->y = -1;
+        this->north_x = -1;
+        this->south_x = -1;
+        this->east_y = -1;
+        this->west_y = -1;
+        this->player_character = NULL;
+    }
+};
+
 int rival_distance_tile[TILE_LENGTH_Y][TILE_WIDTH_X];
 int hiker_distance_tile [TILE_LENGTH_Y][TILE_WIDTH_X];
 
@@ -790,7 +791,7 @@ struct heap turn_heap;
 int main(int argc, char *argv[]) {
 
     //todo: ASSIGNED: change to Ncurses on submission
-    interface = new NoNcurses();
+    interface = new Ncurses();
 
     //get arguments
 //    int opt = 0;
@@ -2056,19 +2057,18 @@ int move_character(int x, int y, int new_x, int new_y) {
             return 1;
         }
     }
-    //else if moving into tall grass
-    else if (point.terrain.id == grass->id) {
-        if (rand() % INVERSE_POKEMON_ENCOUNTER_CHANCE == 0) {
-            Pokemon *pokemon = create_pokemon();
-            combat_pokemon(pokemon);
-        }
-    }
     else {
         tile->tile[y][x].character->x = new_x;
         tile->tile[y][x].character->y = new_y;
         Character *temp_character = tile->tile[y][x].character;
         tile->tile[y][x].character = NULL;
         tile->tile[new_y][new_x].character = temp_character;
+    }
+    if (from_character->type_enum == PLAYER && point.terrain.id == grass->id) {
+        if (rand() % INVERSE_POKEMON_ENCOUNTER_CHANCE == 0) {
+            Pokemon *pokemon = create_pokemon();
+            combat_pokemon(pokemon);
+        }
     }
     return 0;
 
@@ -2112,22 +2112,26 @@ Pokemon * create_pokemon() {
     int maxLevel;
     if (distance <= 200) {
         minLevel = 1;
-        maxLevel = distance/2;
+        maxLevel = distance / 2;
         if (maxLevel < 1) {
             maxLevel = 1;
         }
-    }
-    else {
-        minLevel = (distance - 200)/2;
+    } else {
+        minLevel = (distance - 200) / 2;
         if (minLevel < 1) {
             minLevel = 1;
         }
         maxLevel = 100;
     }
-    int level = minLevel + rand() % (maxLevel - minLevel);
+    int level;
+    if (minLevel == maxLevel) {
+        level = minLevel;
+    } else {
+        level = minLevel + rand() % (maxLevel - minLevel);
+    }
     PokemonMove *pokemonMove = allPokemonMoves[0];
     int found = 0;
-    while (found = 0) {
+    while (found == 0) {
         pokemonMove = allPokemonMoves[rand() % allPokemonMoves.size()];
         if (pokemonMove->pokemon_id == pokemonInfo->species_id && pokemonMove->pokemon_move_method_id == 1) {
             found = 1;
@@ -2139,8 +2143,8 @@ Pokemon * create_pokemon() {
     int base_speed;
     int base_special_attack;
     int base_special_defense;
-    for (int i = 0; i < allPokemonStats.size(); i += 6) {
-        if (allPokemonStats[i]->pokemon_id = pokemonInfo->id) {
+    for (int i = 0; i < (int) allPokemonStats.size(); i += 6) {
+        if (allPokemonStats[i]->pokemon_id == pokemonInfo->id) {
             base_health = allPokemonStats[i]->base_stat;
             base_attack = allPokemonStats[i + 1]->base_stat;
             base_defense = allPokemonStats[i + 2]->base_stat;
@@ -2151,7 +2155,7 @@ Pokemon * create_pokemon() {
         }
     }
     std::vector<Move *> legalMoves;
-    for (int i = 0; i < allMoves.size(); i++) {
+    for (int i = 0; i < (int) allMoves.size(); i++) {
         if (allMoves[i]->id == pokemonMove->move_id) {
             legalMoves.push_back(allMoves[i]);
         }
@@ -2181,8 +2185,6 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *pokemon) {
 
-    //todo: ASSIGNED: check piazza question 435 for pokemon values and nice formatting of battle screen
-
     interface->clearUI();
     interface->addstrUI("A wild pokemon has appeared! Press esc to leave.");
     interface->addstrUI("\n");
@@ -2193,23 +2195,29 @@ int combat_pokemon(Pokemon *pokemon) {
     interface->addstrUI("\n");
     interface->addstrUI("Known Moves:");
     interface->addstrUI("\n");
+    interface->addstrUI("\t");
     interface->addstrUI(pokemon->move1->name.c_str());
     interface->addstrUI("\n");
     if (pokemon->move2 != NULL) {
+        interface->addstrUI("\t");
         interface->addstrUI(pokemon->move2->name.c_str());
         interface->addstrUI("\n");
     }
-    interface->addstrUI("Stats:\tHP\tAttack\tDefense\tS.Attack\tS.Defense\tSpeed");
+    interface->addstrUI("Stats:\tHP\tAttack\tDefense\t\tS.Attack\tS.Defense\tSpeed");
     interface->addstrUI("\n");
+    interface->addstrUI("\t");
     interface->addstrUI(std::to_string(pokemon->getHealth()).c_str());
     interface->addstrUI("\t");
     interface->addstrUI(std::to_string(pokemon->getAttack()).c_str());
     interface->addstrUI("\t");
     interface->addstrUI(std::to_string(pokemon->getDefense()).c_str());
     interface->addstrUI("\t");
+    interface->addstrUI("\t");
     interface->addstrUI(std::to_string(pokemon->getSpecialAttack()).c_str());
     interface->addstrUI("\t");
+    interface->addstrUI("\t");
     interface->addstrUI(std::to_string(pokemon->getSpecialDefense()).c_str());
+    interface->addstrUI("\t");
     interface->addstrUI("\t");
     interface->addstrUI(std::to_string(pokemon->getSpeed()).c_str());
     interface->addstrUI("\n");
