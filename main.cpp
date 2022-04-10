@@ -683,6 +683,7 @@ int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y)
 int generate_buildings(Tile *tile, int x, int y);
 int place_building(Tile *tile, Terrain terrain, double chance);
 int place_player_character(Tile *tile);
+int select_pokemon(Character *playerCharacter);
 int place_trainers(Tile *tile);
 int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_type, char character);
 int dijkstra(Tile *tile, enum character_type trainer_type);
@@ -2157,6 +2158,9 @@ Pokemon * create_pokemon() {
             break;
         }
     }
+    //todo: BUG: need to check if move level is not above pokemon level
+    //todo: BUG: move2 is always null because legal Moves is always a single element. Maybe matching moves incorrectly?
+        //todo: ^ match pokemon_moves rather than moves. Then find move in moves based off of accepted pokemon_moves.
     std::vector<Move *> legalMoves;
     for (int i = 0; i < (int) allMoves.size(); i++) {
         if (allMoves[i]->id == pokemonMove->move_id) {
@@ -2240,7 +2244,7 @@ int combat_pokemon(Pokemon *pokemon) {
         interface->addstrUI("No");
     }
     interface->refreshUI();
-    while (getch() != 27) {}
+    while (interface->getchUI() != 27) {}
 
     return 0;
 
@@ -2849,12 +2853,214 @@ int place_player_character(Tile *tile) {
 
     player_character = new Character(x, y, PLAYER, "PLAYER", '@', COLOR_CYAN,
                                      0, 0, 0, 0, 0, 0);
+    select_pokemon(player_character);
     tile->player_character = (PlayerCharacter *) player_character;
     tile->tile[y][x].character = player_character;
     heap_insert(&turn_heap, player_character);
     //create distance tiles
     dijkstra(tile, RIVAL);
     dijkstra(tile, HIKER);
+
+    return 0;
+
+}
+
+int select_pokemon(Character *playerCharacter) {
+
+    //todo: BUG TEST: test player pokemon choice info provided
+    //todo: BUG TEST: test player pokemon selection works
+
+    //create pokemon choices
+    Pokemon *pokemon1 = create_pokemon();
+    Pokemon *pokemon2 = create_pokemon();
+    Pokemon *pokemon3 = create_pokemon();
+
+    //present pokemon choices to player
+    interface->clearUI();
+
+    interface->addstrUI("Input 1/2/3 to choose the respective starting pokemon!");
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Option: ");
+    interface->addstrUI("\t");
+    interface->addstrUI("1. ");
+    interface->addstrUI(pokemon1->pokemonInfo->name.c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI("2. ");
+    interface->addstrUI(pokemon2->pokemonInfo->name.c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI("3. ");
+    interface->addstrUI(pokemon3->pokemonInfo->name.c_str());
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Level: ");
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon1->level).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon2->level).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon3->level).c_str());
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Move 1: ");
+    interface->addstrUI("\t");
+    interface->addstrUI(pokemon1->move1->name.c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(pokemon2->move1->name.c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(pokemon3->move1->name.c_str());
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Move 2: ");
+    interface->addstrUI("\t");
+    if (pokemon1->move2 != NULL) {
+        interface->addstrUI(pokemon1->move2->name.c_str());
+    }
+    else {
+        interface->addstrUI("none");
+    }
+    interface->addstrUI("\t");
+    if (pokemon1->move2 != NULL) {
+        interface->addstrUI(pokemon2->move2->name.c_str());
+    }
+    else {
+        interface->addstrUI("none");
+    }
+    interface->addstrUI("\t");
+    if (pokemon1->move2 != NULL) {
+        interface->addstrUI(pokemon3->move2->name.c_str());
+    }
+    else {
+        interface->addstrUI("none");
+    }
+    interface->addstrUI("\n");
+
+    interface->addstrUI("HP: ");
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon1->getHealth()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon2->getHealth()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon3->getHealth()).c_str());
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Attack: ");
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon1->getAttack()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon2->getAttack()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon3->getAttack()).c_str());
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Defense: ");
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon1->getDefense()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon2->getDefense()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon3->getDefense()).c_str());
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Special Attack: ");
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon1->getSpecialAttack()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon2->getSpecialAttack()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon3->getSpecialAttack()).c_str());
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Special Defense: ");
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon1->getSpecialDefense()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon2->getSpecialDefense()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon3->getSpecialDefense()).c_str());
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Speed: ");
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon1->getSpeed()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon2->getSpeed()).c_str());
+    interface->addstrUI("\t");
+    interface->addstrUI(std::to_string(pokemon3->getSpeed()).c_str());
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Gender: ");
+    interface->addstrUI("\t");
+    if (pokemon1->male == true) {
+        interface->addstrUI("Male");
+    }
+    else {
+        interface->addstrUI("Female");
+    }
+    interface->addstrUI("\t");
+    if (pokemon2->male == true) {
+        interface->addstrUI("Male");
+    }
+    else {
+        interface->addstrUI("Female");
+    }
+    interface->addstrUI("\t");
+    if (pokemon3->male == true) {
+        interface->addstrUI("Male");
+    }
+    else {
+        interface->addstrUI("Female");
+    }
+    interface->addstrUI("\n");
+
+    interface->addstrUI("Shiny: ");
+    interface->addstrUI("\t");
+    if (pokemon1->shiny == true) {
+        interface->addstrUI("Yes");
+    }
+    else {
+        interface->addstrUI("No");
+    }
+    interface->addstrUI("\t");
+    if (pokemon2->shiny == true) {
+        interface->addstrUI("Yes");
+    }
+    else {
+        interface->addstrUI("No");
+    }
+    interface->addstrUI("\t");
+    if (pokemon3->shiny == true) {
+        interface->addstrUI("Yes");
+    }
+    else {
+        interface->addstrUI("No");
+    }
+    interface->addstrUI("\n");
+
+    interface->refreshUI();
+
+    //player chooses pokemon
+    Pokemon *chosenPokemon;
+    while (true) {
+        char choice = interface->getchUI();
+        if (choice == '1') {
+            chosenPokemon = pokemon1;
+            break;
+        }
+        else if (choice == '2') {
+            chosenPokemon = pokemon2;
+            break;
+        }
+        else if (choice == '3') {
+            chosenPokemon = pokemon3;
+            break;
+        }
+        else {
+            interface->mvaddstrUI(0, 0, (const char *)choice);
+            interface->addstrUI("is not a valid input. Please input 1/2/3 to choose the respective starting pokemon!");
+        }
+    }
+    playerCharacter->pokemon.push_back(chosenPokemon);
 
     return 0;
 
