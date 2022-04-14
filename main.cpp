@@ -795,7 +795,7 @@ struct heap turn_heap;
 int main(int argc, char *argv[]) {
 
     //todo: ASSIGNED: change to Ncurses on submission
-    interface = new NoNcurses();
+    interface = new Ncurses();
 
     //get arguments
 //    int opt = 0;
@@ -2080,6 +2080,8 @@ int move_character(int x, int y, int new_x, int new_y) {
 
 int combat_trainer(Character *from_character, Character *to_character) {
 
+    //todo: ASSIGNED: same as combat pokemon, but trainer gets choices too
+
     if (from_character->type_enum == PLAYER) {
         //player attacks trainer
         to_character->defeated = 1;
@@ -2192,59 +2194,26 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *pokemon) {
 
-    interface->clearUI();
-    interface->addstrUI("A wild pokemon has appeared! Press esc to leave.");
-    interface->addstrUI("\n");
-    interface->addstrUI("Level ");
-    interface->addstrUI(std::to_string(pokemon->level).c_str());
-    interface->addstrUI(" ");
-    interface->addstrUI(pokemon->pokemonInfo->name.c_str());
-    interface->addstrUI("\n");
-    interface->addstrUI("Known Moves:");
-    interface->addstrUI("\n");
-    interface->addstrUI("\t");
-    interface->addstrUI(pokemon->move1->name.c_str());
-    interface->addstrUI("\n");
-    if (pokemon->move2 != NULL) {
-        interface->addstrUI("\t");
-        interface->addstrUI(pokemon->move2->name.c_str());
-        interface->addstrUI("\n");
-    }
-    interface->addstrUI("Stats:\tHP\tAttack\tDefense\t\tS.Attack\tS.Defense\tSpeed");
-    interface->addstrUI("\n");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon->getHealth()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon->getAttack()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon->getDefense()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon->getSpecialAttack()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon->getSpecialDefense()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon->getSpeed()).c_str());
-    interface->addstrUI("\n");
-    interface->addstrUI("Gender: ");
-    if (pokemon->male) {
-        interface->addstrUI("Male");
-    }
-    else {
-        interface->addstrUI("Female");
-    }
-    interface->addstrUI("\n");
-    interface->addstrUI("Shiny: ");
-    if (pokemon->shiny) {
-        interface->addstrUI("Yes");
-    }
-    else {
-        interface->addstrUI("No");
-    }
-    interface->refreshUI();
-    while (interface->getchUI() != 27) {}
+    //todo: ASSIGNED: while end conditions not met
+    //todo: ASSIGNED: create possible actions (fight, bag, run, switch pokemon)
+    //todo: ASSIGNED: implement fight
+        //todo: ^: choose move (not used yet) or go back
+        //todo: ^: are you sure question
+    //todo: ASSIGNED: implement bag
+        //todo: ^: choose item (not used yet) or go back
+        //todo: ^: are you sure question
+    //todo: ASSIGNED: implement switch pokemon
+        //todo: ^: choose pokemon (not switched yet) or go back
+        //todo: ^: are you sure question
+    //todo: ASSIGNED: implement run
+        //todo: ^: set run to true
+        //todo: ^: are you sure question
+    //todo: ASSIGNED: do combat
+        //todo: ^: determine attack order
+        //todo: ^: do faster attack
+        //todo: ^: do slower attack if pokemon isn't knocked out
+    //todo: ASSIGNED: determine if end conditions met
+    //todo: ASSIGNED: completed battle screen with result esp to leave
 
     return 0;
 
@@ -2878,164 +2847,129 @@ int select_pokemon(Character *playerCharacter) {
     //present pokemon choices to player
     interface->clearUI();
 
+    int lineNumber = 0;
+
     interface->addstrUI("Input 1/2/3 to choose the respective starting pokemon!");
-    interface->addstrUI("\n");
+    lineNumber++;
 
-    interface->addstrUI("Option: ");
-    interface->addstrUI("\t");
-    interface->addstrUI("1. ");
+    interface->mvaddstrUI(lineNumber, 0, "Option: ");
+    interface->mvaddstrUI(lineNumber, 20, "1. ");
     interface->addstrUI(pokemon1->pokemonInfo->name.c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI("2. ");
+    interface->mvaddstrUI(lineNumber, 40, "2. ");
     interface->addstrUI(pokemon2->pokemonInfo->name.c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI("3. ");
+    interface->mvaddstrUI(lineNumber, 60, "3. ");
     interface->addstrUI(pokemon3->pokemonInfo->name.c_str());
-    interface->addstrUI("\n");
+    lineNumber++;
 
-    interface->addstrUI("Level: ");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon1->level).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon2->level).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon3->level).c_str());
-    interface->addstrUI("\n");
+    interface->mvaddstrUI(lineNumber, 0, "Level: ");
+    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->level).c_str());
+    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->level).c_str());
+    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->level).c_str());
+    lineNumber++;
 
-    interface->addstrUI("Move 1: ");
-    interface->addstrUI("\t");
-    interface->addstrUI(pokemon1->move1->name.c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(pokemon2->move1->name.c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(pokemon3->move1->name.c_str());
-    interface->addstrUI("\n");
+    interface->mvaddstrUI(lineNumber, 0, "Move 1: ");
+    interface->mvaddstrUI(lineNumber, 20, pokemon1->move1->name.c_str());
+    interface->mvaddstrUI(lineNumber, 40, pokemon2->move1->name.c_str());
+    interface->mvaddstrUI(lineNumber, 60, pokemon3->move1->name.c_str());
+    lineNumber++;
 
-    interface->addstrUI("Move 2: ");
-    interface->addstrUI("\t");
+    interface->mvaddstrUI(lineNumber, 0, "Move 2: ");
     if (pokemon1->move2 != NULL) {
-        interface->addstrUI(pokemon1->move2->name.c_str());
+        interface->mvaddstrUI(lineNumber, 20, pokemon1->move2->name.c_str());
     }
     else {
-        interface->addstrUI("none");
+        interface->mvaddstrUI(lineNumber, 20, "none");
     }
-    interface->addstrUI("\t");
     if (pokemon1->move2 != NULL) {
-        interface->addstrUI(pokemon2->move2->name.c_str());
+        interface->mvaddstrUI(lineNumber, 40, pokemon2->move2->name.c_str());
     }
     else {
-        interface->addstrUI("none");
+        interface->mvaddstrUI(lineNumber, 40, "none");
     }
-    interface->addstrUI("\t");
     if (pokemon1->move2 != NULL) {
-        interface->addstrUI(pokemon3->move2->name.c_str());
+        interface->mvaddstrUI(lineNumber, 60, pokemon3->move2->name.c_str());
     }
     else {
-        interface->addstrUI("none");
+        interface->mvaddstrUI(lineNumber, 60, "none");
     }
-    interface->addstrUI("\n");
+    lineNumber++;
 
-    interface->addstrUI("HP: ");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon1->getHealth()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon2->getHealth()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon3->getHealth()).c_str());
-    interface->addstrUI("\n");
+    interface->mvaddstrUI(lineNumber, 0, "HP: ");
+    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getHealth()).c_str());
+    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getHealth()).c_str());
+    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getHealth()).c_str());
+    lineNumber++;
 
-    interface->addstrUI("Attack: ");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon1->getAttack()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon2->getAttack()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon3->getAttack()).c_str());
-    interface->addstrUI("\n");
+    interface->mvaddstrUI(lineNumber, 0, "Attack: ");
+    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getAttack()).c_str());
+    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getAttack()).c_str());
+    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getAttack()).c_str());
+    lineNumber++;
 
-    interface->addstrUI("Defense: ");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon1->getDefense()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon2->getDefense()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon3->getDefense()).c_str());
-    interface->addstrUI("\n");
+    interface->mvaddstrUI(lineNumber, 0, "Defense: ");
+    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getDefense()).c_str());
+    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getDefense()).c_str());
+    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getDefense()).c_str());
+    lineNumber++;
 
-    interface->addstrUI("Special Attack: ");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon1->getSpecialAttack()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon2->getSpecialAttack()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon3->getSpecialAttack()).c_str());
-    interface->addstrUI("\n");
+    interface->mvaddstrUI(lineNumber, 0, "Special Attack: ");
+    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getSpecialAttack()).c_str());
+    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getSpecialAttack()).c_str());
+    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getSpecialAttack()).c_str());
+    lineNumber++;
 
-    interface->addstrUI("Special Defense: ");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon1->getSpecialDefense()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon2->getSpecialDefense()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon3->getSpecialDefense()).c_str());
-    interface->addstrUI("\n");
+    interface->mvaddstrUI(lineNumber, 0, "Special Defense: ");
+    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getSpecialDefense()).c_str());
+    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getSpecialDefense()).c_str());
+    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getSpecialDefense()).c_str());
+    lineNumber++;
 
-    interface->addstrUI("Speed: ");
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon1->getSpeed()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon2->getSpeed()).c_str());
-    interface->addstrUI("\t");
-    interface->addstrUI(std::to_string(pokemon3->getSpeed()).c_str());
-    interface->addstrUI("\n");
+    interface->mvaddstrUI(lineNumber, 0, "Speed: ");
+    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getSpeed()).c_str());
+    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getSpeed()).c_str());
+    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getSpeed()).c_str());
+    lineNumber++;
 
-    interface->addstrUI("Gender: ");
-    interface->addstrUI("\t");
+    interface->mvaddstrUI(lineNumber, 0, "Gender: ");
     if (pokemon1->male == true) {
-        interface->addstrUI("Male");
+        interface->mvaddstrUI(lineNumber, 20, "Male");
     }
     else {
-        interface->addstrUI("Female");
+        interface->mvaddstrUI(lineNumber, 20, "Female");
     }
-    interface->addstrUI("\t");
     if (pokemon2->male == true) {
-        interface->addstrUI("Male");
+        interface->mvaddstrUI(lineNumber, 40, "Male");
     }
     else {
-        interface->addstrUI("Female");
+        interface->mvaddstrUI(lineNumber, 40, "Female");
     }
-    interface->addstrUI("\t");
     if (pokemon3->male == true) {
-        interface->addstrUI("Male");
+        interface->mvaddstrUI(lineNumber, 60, "Male");
     }
     else {
-        interface->addstrUI("Female");
+        interface->mvaddstrUI(lineNumber, 60, "Female");
     }
-    interface->addstrUI("\n");
+    lineNumber++;
 
-    interface->addstrUI("Shiny: ");
-    interface->addstrUI("\t");
+    interface->mvaddstrUI(lineNumber, 0, "Shiny: ");
     if (pokemon1->shiny == true) {
-        interface->addstrUI("Yes");
+        interface->mvaddstrUI(lineNumber, 20, "Yes");
     }
     else {
-        interface->addstrUI("No");
+        interface->mvaddstrUI(lineNumber, 20, "No");
     }
-    interface->addstrUI("\t");
     if (pokemon2->shiny == true) {
-        interface->addstrUI("Yes");
+        interface->mvaddstrUI(lineNumber, 40, "Yes");
     }
     else {
-        interface->addstrUI("No");
+        interface->mvaddstrUI(lineNumber, 40, "No");
     }
-    interface->addstrUI("\t");
     if (pokemon3->shiny == true) {
-        interface->addstrUI("Yes");
+        interface->mvaddstrUI(lineNumber, 60, "Yes");
     }
     else {
-        interface->addstrUI("No");
+        interface->mvaddstrUI(lineNumber, 60, "No");
     }
-    interface->addstrUI("\n");
 
     interface->refreshUI();
 
