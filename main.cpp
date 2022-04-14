@@ -2976,7 +2976,7 @@ int select_pokemon(Character *playerCharacter) {
     //player chooses pokemon
     Pokemon *chosenPokemon;
     while (true) {
-        char choice = interface->getchUI();
+        const char choice = interface->getchUI();
         if (choice == '1') {
             chosenPokemon = pokemon1;
             break;
@@ -2990,8 +2990,8 @@ int select_pokemon(Character *playerCharacter) {
             break;
         }
         else {
-            interface->mvaddstrUI(0, 0, (const char *)choice);
-            interface->addstrUI("is not a valid input. Please input 1/2/3 to choose the respective starting pokemon!");
+            interface->mvaddstrUI(0, 0, &choice);
+            interface->addstrUI(" is not a valid input. Please input 1/2/3 to choose the respective starting pokemon!");
         }
     }
     playerCharacter->pokemon.push_back(chosenPokemon);
