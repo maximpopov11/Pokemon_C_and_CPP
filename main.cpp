@@ -513,6 +513,36 @@ public:
     }
 };
 
+class PokemonType {
+public:
+    int pokemon_id;
+    int type_id;
+    int slot;
+    std::string pokemonTypeString;
+
+    PokemonType(std::string pokemon_id, std::string type_id, std::string slot) {
+        this->pokemon_id = stoi(pokemon_id);
+        this->type_id = stoi(type_id);
+        this->slot = stoi(slot);
+        pokemonTypeString = "";
+        if (this->pokemon_id != -1) {
+            pokemonTypeString += pokemon_id;
+        }
+        pokemonTypeString += ",";
+        if (this->type_id != -1) {
+            pokemonTypeString += type_id;
+        }
+        pokemonTypeString += ",";
+        if (this->slot != -1) {
+            pokemonTypeString += slot;
+        }
+    }
+
+    std::string toString() {
+        return pokemonTypeString;
+    }
+};
+
 class Pokemon {
 public:
     PokemonInfo *pokemonInfo;
@@ -661,6 +691,7 @@ int storePokemonSpecies();
 int storeExperience();
 int storeTypeNames();
 int storePokemonStats();
+int storePokemonTypes();
 //commented due to database info failing to make
 //int printData(std::vector<DatabaseInfo *> dataVector);
 int turn_based_movement();
@@ -785,6 +816,7 @@ std::vector<PokemonSpecies *> allPokemonSpecies;
 std::vector<Experience *> allExperience;
 std::vector<TypeName *> allTypeNames;
 std::vector<PokemonStat *> allPokemonStats;
+std::vector<PokemonType *> allPokemonTypes;
 Tile *world[WORLD_LENGTH_Y][WORLD_WIDTH_X] = {0};
 int current_tile_x;
 int current_tile_y;
@@ -795,7 +827,7 @@ struct heap turn_heap;
 int main(int argc, char *argv[]) {
 
     //todo: ASSIGNED: change to Ncurses on submission
-    interface = new Ncurses();
+    interface = new NoNcurses();
 
     //get arguments
 //    int opt = 0;
@@ -835,6 +867,9 @@ int main(int argc, char *argv[]) {
     }
     if (storePokemonStats() != 0) {
         std::cout << "File not opened successfully. File: pokemon_stats.csv" << "\n";
+    }
+    if (storePokemonTypes() != 0) {
+        std::cout << "File not opened successfully. File: pokemon_types.csv" << "\n";
     }
     if (argc < 2) {
         std::cout << "No arguments provided." << "\n";
@@ -1287,6 +1322,38 @@ int storePokemonStats() {
             }
             PokemonStat *stat = new PokemonStat(pokemon_id, stat_id, base_stat, effort);
             allPokemonStats.push_back(stat);
+        }
+    }
+    else {
+        //file not opened successfully
+        return 1;
+    }
+
+    return 0;
+
+}
+
+int storePokemonTypes() {
+
+    std::ifstream file;
+    file.open(filePath + "pokedex/pokedex/data/csv/pokemon_types.csv");
+    if (file.is_open()) {
+        std::string pokemon_id, type_id, slot;
+        getline(file, pokemon_id, '\n');
+        while(getline(file, pokemon_id, ',')) {
+            getline(file, type_id, ',');
+            getline(file, slot, '\n');
+            if (pokemon_id == "") {
+                pokemon_id = "-1";
+            }
+            if (type_id == "") {
+                type_id = "-1";
+            }
+            if (slot == "") {
+                slot = "-1";
+            }
+            PokemonType *type = new PokemonType(pokemon_id, type_id, slot);
+            allPokemonTypes.push_back(type);
         }
     }
     else {
