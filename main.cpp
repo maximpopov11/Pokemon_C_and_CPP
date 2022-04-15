@@ -834,7 +834,7 @@ struct heap turn_heap;
 int main(int argc, char *argv[]) {
 
     //todo: ASSIGNED: change to Ncurses on submission
-    interface = new NoNcurses();
+    interface = new Ncurses();
 
     //get arguments
 //    int opt = 0;
@@ -2287,8 +2287,6 @@ int combat_pokemon(Pokemon *pokemon) {
     //todo: ASSIGNED: determine if end conditions met
     //todo: ASSIGNED: completed battle screen with result esp to leave
 
-    interface->clearUI();
-
     bool over = false;
     while (!over) {
         const char input = interface->getchUI();
@@ -2302,9 +2300,11 @@ int combat_pokemon(Pokemon *pokemon) {
             case 'R':
 
             default:
+                interface->clearUI();
                 interface->addstrUI(&input);
                 interface->addstrUI(" is not a valid command."
                                     "\n'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
+                interface->refreshUI();
         }
     }
 
