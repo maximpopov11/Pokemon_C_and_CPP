@@ -34,6 +34,13 @@ enum character_type {
     STATIONARY
 };
 
+enum combat_option {
+    FIGHT,
+    SWITCH,
+    BAG,
+    RUN
+};
+
 class Terrain {
 public:
     int id;
@@ -2261,16 +2268,14 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *pokemon) {
 
-    //todo: ASSIGNED: while end conditions not met
-    //todo: ASSIGNED: create possible actions (fight, bag, run, switch pokemon)
     //todo: ASSIGNED: implement fight
         //todo: ^: choose move (not used yet) or go back
         //todo: ^: are you sure question
-    //todo: ASSIGNED: implement bag
-        //todo: ^: choose item (not used yet) or go back
-        //todo: ^: are you sure question
     //todo: ASSIGNED: implement switch pokemon
         //todo: ^: choose pokemon (not switched yet) or go back
+        //todo: ^: are you sure question
+    //todo: ASSIGNED: implement bag
+        //todo: ^: choose item (not used yet) or go back
         //todo: ^: are you sure question
     //todo: ASSIGNED: implement run
         //todo: ^: set run to true
@@ -2281,6 +2286,27 @@ int combat_pokemon(Pokemon *pokemon) {
         //todo: ^: do slower attack if pokemon isn't knocked out
     //todo: ASSIGNED: determine if end conditions met
     //todo: ASSIGNED: completed battle screen with result esp to leave
+
+    interface->clearUI();
+
+    bool over = false;
+    while (!over) {
+        const char input = interface->getchUI();
+        switch (input) {
+            case 'F':
+
+            case 'S':
+
+            case 'B':
+
+            case 'R':
+
+            default:
+                interface->addstrUI(&input);
+                interface->addstrUI(" is not a valid command."
+                                    "\n'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
+        }
+    }
 
     return 0;
 
