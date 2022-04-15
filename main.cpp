@@ -570,6 +570,7 @@ public:
     Move *move2 = NULL;
     bool male;
     bool shiny;
+    bool knockedOut = false;
 
     Pokemon(PokemonInfo *pokemonInfo, int base_health, int base_attack, int base_defense, int base_speed,
             int base_special_attack, int base_special_defense, int level, Move *move1, Move *move2, bool male,
@@ -618,7 +619,7 @@ public:
     int y_direction;
     int in_building;
     int defeated;
-    std::vector<Pokemon *> pokemon;
+    std::vector<Pokemon *> activePokemon;
 
     Character(int x, int y, enum  character_type type_enum, std::string type_string, char printable_character, short color,
               int turn, int direction_set, int x_direction, int y_direction, int in_building, int defeated) : x(x), y(y),
@@ -707,8 +708,8 @@ int move_character(int x, int y, int new_x, int new_y);
 int combat_trainer(Character *from_character, Character *to_character);
 Pokemon * create_pokemon();
 int combat_pokemon(Pokemon *pokemon);
-int fight_action();
-int switch_pokemon_action();
+int fight_action(Pokemon *selectedPokemon);
+Pokemon * switch_pokemon_action();
 int bag_action();
 int run_action();
 int enter_center();
@@ -859,7 +860,7 @@ int main(int argc, char *argv[]) {
 
     //save database information into classes
     if (storePokemon() != 0) {
-        std::cout << "File not opened successfully. File: pokemon.csv" << "\n";
+        std::cout << "File not opened successfully. File: activePokemon.csv" << "\n";
     }
     if (storeMoves() != 0) {
         std::cout << "File not opened successfully. File: moves.csv" << "\n";
@@ -887,7 +888,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         std::string fileName = argv[1];
-        if (fileName == "pokemon") {
+        if (fileName == "activePokemon") {
             for (int i = 0; i < (int) allPokemonInfo.size(); i++) {
                 std::cout << allPokemonInfo[i]->toString() << "\n";
             }
@@ -960,7 +961,7 @@ int print_usage() {
 int storePokemon() {
 
     std::ifstream file;
-    file.open(filePath + "pokedex/pokedex/data/csv/pokemon.csv");
+    file.open(filePath + "pokedex/pokedex/data/csv/activePokemon.csv");
     if (file.is_open()) {
         std:: string id, name, species_id, height, weight, base_experience, order, is_default;
         getline(file, id, '\n');
@@ -2158,7 +2159,7 @@ int move_character(int x, int y, int new_x, int new_y) {
 
 int combat_trainer(Character *from_character, Character *to_character) {
 
-    //todo: ASSIGNED: same as combat pokemon, but trainer gets choices too
+    //todo: ASSIGNED: same as combat activePokemon, but trainer gets choices too
 
     if (from_character->type_enum == PLAYER) {
         //player attacks trainer
@@ -2238,7 +2239,7 @@ Pokemon * create_pokemon() {
             break;
         }
     }
-    //todo: BUG: need to check if move level is not above pokemon level
+    //todo: BUG: need to check if move level is not above activePokemon level
     //todo: BUG: move2 is always null because legal Moves is always a single element. Maybe matching moves incorrectly?
         //todo: ^ match pokemon_moves rather than moves. Then find move in moves based off of accepted pokemon_moves.
     std::vector<Move *> legalMoves;
@@ -2272,12 +2273,8 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *pokemon) {
 
-    //todo: ASSIGNED: implement fight
-        //todo: ^: choose move (not used yet) or go back
-        //todo: ^: are you sure question
-    //todo: ASSIGNED: implement switch pokemon
-        //todo: ^: choose pokemon (not switched yet) or go back
-        //todo: ^: are you sure question
+    //todo: ASSIGNED: cannot select knocked out activePokemon
+    //todo: ASSIGNED: start PC with a small number of potions, revives, and pokeballs
     //todo: ASSIGNED: implement bag
         //todo: ^: choose item (not used yet) or go back
         //todo: ^: are you sure question
@@ -2285,24 +2282,32 @@ int combat_pokemon(Pokemon *pokemon) {
         //todo: ^: set run to true
         //todo: ^: are you sure question
     //todo: ASSIGNED: do combat
-        //todo: ^: determine attack order
+        //todo: ^: if not activePokemon move, do it
+        //todo: ^: determine attack order if both are activePokemon moves
         //todo: ^: do faster attack
-        //todo: ^: do slower attack if pokemon isn't knocked out
+        //todo: ^: do slower attack if activePokemon isn't knocked out
+        //todo: ^: if activePokemon health goes to 0 knock it out and do not set hp below 0
+        //todo: ^: attacks have a chance to miss
     //todo: ASSIGNED: determine if end conditions met
     //todo: ASSIGNED: completed battle screen with result esp to leave
+    //todo: ASSIGNED: use bag outside of battle
 
     bool battleOver = false;
+    Pokemon *selectedPokemon = player_character->activePokemon.at(0);
     while (!battleOver) {
         bool actionSelected = false;
         while (!actionSelected) {
+            interface->clearUI();
+            interface->addstrUI("Input a command: 'F' to fight; 'S' to switch activePokemon; 'B' to open your bag; 'R' to run away");
+            interface->refreshUI();
             const char input = interface->getchUI();
             switch (input) {
                 case 'F':
-                    if (fight_action() == 0) {
+                    if (fight_action(selectedPokemon) != 0) {
                         actionSelected = true;
                     }
                 case 'S':
-                    if (switch_pokemon_action() == 0) {
+                    if (switch_pokemon_action() != NULL) {
                         actionSelected = true;
                     }
                 case 'B':
@@ -2317,7 +2322,7 @@ int combat_pokemon(Pokemon *pokemon) {
                     interface->clearUI();
                     interface->addstrUI(&input);
                     interface->addstrUI(" is not a valid command."
-                                        "\n'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
+                                        "\n'F' to fight; 'S' to switch activePokemon; 'B' to open your bag; 'R' to run away");
                     interface->refreshUI();
             }
         }
@@ -2327,15 +2332,104 @@ int combat_pokemon(Pokemon *pokemon) {
 
 }
 
-int fight_action() {
+/**
+ * Shows available moves for the selected activePokemon and asks the user to chose one of the moves.
+ * @param selectedPokemon: selected activePokemon
+ * @return the chosen move number (ex. 1 for move 1) or 0 to go back
+ */
+int fight_action(Pokemon *selectedPokemon) {
 
-    return 0;
+    //shows activePokemon moves
+    interface->clearUI();
+    interface->addstrUI("Select a move by inputting the number corresponding to the move or press esc to go back.");
+    interface->mvaddstrUI(1, 0, "Move 1: ");
+    interface->addstrUI(selectedPokemon->move1->name.c_str());
+    if (selectedPokemon->move2 != NULL) {
+        interface->mvaddstrUI(2, 0, "Move 2: ");
+        interface->addstrUI(selectedPokemon->move2->name.c_str());
+    }
+    interface->refreshUI();
+
+    //chose a move
+    while (true) {
+        const char input = interface->getchUI();
+        if (input == '1') {
+            return 1;
+        }
+        else if (selectedPokemon->move2 != NULL && input == '2') {
+            return 2;
+        }
+        else if (input == 27) {
+            return 0;
+        }
+        else {
+            interface->clearUI();
+            interface->mvaddstrUI(0, 0, &input);
+            interface->addstrUI(" is not a valid input. Press a number corresponding to a move or esc to go back.");    interface->mvaddstrUI(1, 0, "Move 1: ");
+            interface->addstrUI(selectedPokemon->move1->name.c_str());
+            if (selectedPokemon->move2 != NULL) {
+                interface->mvaddstrUI(2, 0, "Move 2: ");
+                interface->addstrUI(selectedPokemon->move2->name.c_str());
+            }
+            interface->refreshUI();
+        }
+    }
 
 }
 
-int switch_pokemon_action() {
+Pokemon * switch_pokemon_action() {
 
-    return 0;
+    //shows activePokemon choices
+    int line = 0;
+    interface->clearUI();
+    interface->mvaddstrUI(line, 0, "Select a activePokemon by inputting the corresponding number or press esc to go back.");
+    line++;
+    for (int i = 0; i < player_character->activePokemon.size(); i++) {
+        interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
+        interface->addstrUI(". ");
+        interface->addstrUI(player_character->activePokemon.at(i)->pokemonInfo->name.c_str());
+        line++;
+    }
+    interface->refreshUI();
+
+    while (true) {
+        const char input = interface->getchUI();
+        if (input > 0 && input <= player_character->activePokemon.size()) {
+            Pokemon * pokemon = player_character->activePokemon.at(input - '0' - 1);
+            if (pokemon->knockedOut == false) {
+                return pokemon;
+            }
+            else {
+                int line = 0;
+                interface->clearUI();
+                interface->mvaddstrUI(line, 0, "That pokemon is knocked out. Please input a number corresponding to a activePokemon or esc to go back.");
+                line++;
+                for (int i = 0; i < player_character->activePokemon.size(); i++) {
+                    interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
+                    interface->addstrUI(". ");
+                    interface->addstrUI(player_character->activePokemon.at(i)->pokemonInfo->name.c_str());
+                    line++;
+                }
+                interface->refreshUI();
+            }
+        }
+        else if (input == 27) {
+            return NULL;
+        }
+        else {
+            int line = 0;
+            interface->clearUI();
+            interface->mvaddstrUI(line, 0, "That is not a valid input. Please input a number corresponding to a activePokemon or esc to go back.");
+            line++;
+            for (int i = 0; i < player_character->activePokemon.size(); i++) {
+                interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
+                interface->addstrUI(". ");
+                interface->addstrUI(player_character->activePokemon.at(i)->pokemonInfo->name.c_str());
+                line++;
+            }
+            interface->refreshUI();
+        }
+    }
 
 }
 
@@ -2968,20 +3062,17 @@ int place_player_character(Tile *tile) {
 
 int select_pokemon(Character *playerCharacter) {
 
-    //todo: BUG TEST: test player pokemon choice info provided
-    //todo: BUG TEST: test player pokemon selection works
-
-    //create pokemon choices
+    //create activePokemon choices
     Pokemon *pokemon1 = create_pokemon();
     Pokemon *pokemon2 = create_pokemon();
     Pokemon *pokemon3 = create_pokemon();
 
-    //present pokemon choices to player
+    //present activePokemon choices to player
     interface->clearUI();
 
     int lineNumber = 0;
 
-    interface->addstrUI("Input 1/2/3 to choose the respective starting pokemon!");
+    interface->addstrUI("Input 1/2/3 to choose the respective starting activePokemon!");
     lineNumber++;
 
     interface->mvaddstrUI(lineNumber, 0, "Option: ");
@@ -3105,7 +3196,7 @@ int select_pokemon(Character *playerCharacter) {
 
     interface->refreshUI();
 
-    //player chooses pokemon
+    //player chooses activePokemon
     Pokemon *chosenPokemon;
     while (true) {
         const char choice = interface->getchUI();
@@ -3123,10 +3214,10 @@ int select_pokemon(Character *playerCharacter) {
         }
         else {
             interface->mvaddstrUI(0, 0, &choice);
-            interface->addstrUI(" is not a valid input. Please input 1/2/3 to choose the respective starting pokemon!");
+            interface->addstrUI(" is not a valid input. Please input 1/2/3 to choose the respective starting activePokemon!");
         }
     }
-    playerCharacter->pokemon.push_back(chosenPokemon);
+    playerCharacter->activePokemon.push_back(chosenPokemon);
 
     return 0;
 
@@ -3235,11 +3326,11 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
         Character *trainer = new Character(x, y, trainer_type, type_string, character,
                                            COLOR_RED, 0, 0, 0, 0,
                                            0, 0);
-        trainer->pokemon.push_back(create_pokemon());
-        //60% chance for trainer to get another pokemon if just got a pokemon, up to 6
+        trainer->activePokemon.push_back(create_pokemon());
+        //60% chance for trainer to get another activePokemon if just got a activePokemon, up to 6
         for (int i = 0; i < 5; i++) {
             if (rand() % 10 < 6) {
-                trainer->pokemon.push_back(create_pokemon());
+                trainer->activePokemon.push_back(create_pokemon());
             }
             else {
                 break;
