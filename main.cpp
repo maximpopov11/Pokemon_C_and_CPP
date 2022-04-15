@@ -707,6 +707,10 @@ int move_character(int x, int y, int new_x, int new_y);
 int combat_trainer(Character *from_character, Character *to_character);
 Pokemon * create_pokemon();
 int combat_pokemon(Pokemon *pokemon);
+int fight_action();
+int switch_pokemon_action();
+int bag_action();
+int run_action();
 int enter_center();
 int enter_mart();
 int change_tile(int x, int y);
@@ -2287,26 +2291,61 @@ int combat_pokemon(Pokemon *pokemon) {
     //todo: ASSIGNED: determine if end conditions met
     //todo: ASSIGNED: completed battle screen with result esp to leave
 
-    bool over = false;
-    while (!over) {
-        const char input = interface->getchUI();
-        switch (input) {
-            case 'F':
-
-            case 'S':
-
-            case 'B':
-
-            case 'R':
-
-            default:
-                interface->clearUI();
-                interface->addstrUI(&input);
-                interface->addstrUI(" is not a valid command."
-                                    "\n'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
-                interface->refreshUI();
+    bool battleOver = false;
+    while (!battleOver) {
+        bool actionSelected = false;
+        while (!actionSelected) {
+            const char input = interface->getchUI();
+            switch (input) {
+                case 'F':
+                    if (fight_action() == 0) {
+                        actionSelected = true;
+                    }
+                case 'S':
+                    if (switch_pokemon_action() == 0) {
+                        actionSelected = true;
+                    }
+                case 'B':
+                    if (bag_action() == 0) {
+                        actionSelected = true;
+                    }
+                case 'R':
+                    if (run_action() == 0) {
+                        actionSelected = true;
+                    }
+                default:
+                    interface->clearUI();
+                    interface->addstrUI(&input);
+                    interface->addstrUI(" is not a valid command."
+                                        "\n'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
+                    interface->refreshUI();
+            }
         }
     }
+
+    return 0;
+
+}
+
+int fight_action() {
+
+    return 0;
+
+}
+
+int switch_pokemon_action() {
+
+    return 0;
+
+}
+
+int bag_action() {
+
+    return 0;
+
+}
+
+int run_action() {
 
     return 0;
 
