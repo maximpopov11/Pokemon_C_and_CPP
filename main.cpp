@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <thread>
 #include "heap.h"
 
 #define SCREEN_HEIGHT 24
@@ -665,12 +666,16 @@ public:
         }
     }
 
-    bool usePokeball(std::vector<Pokemon *> activePokemon) {
-        if (activePokemon.size() < 6) {
-            return true;
+    int usePokeball(std::vector<Pokemon *> activePokemon) {
+        if (numPokeballs > 0) {
+            if (activePokemon.size() < 6) {
+                return 0;
+            } else {
+                return 2;
+            }
         }
         else {
-            return false;
+            return 1;
         }
     }
 
@@ -781,10 +786,11 @@ int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
 int combat_trainer(Character *from_character, Character *to_character);
 Pokemon * create_pokemon();
-int combat_pokemon(Pokemon *pokemon);
+int combat_pokemon(Pokemon *enemyPokemon);
 int fight_action(Pokemon *selectedPokemon);
 Pokemon * switch_pokemon_action();
-int bag_action();
+int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyPokemon);
+int usePokeball(bool success, Pokemon *targetPokemon);
 int run_action();
 int enter_center();
 int enter_mart();
@@ -2345,9 +2351,9 @@ Pokemon * create_pokemon() {
 
 }
 
-int combat_pokemon(Pokemon *pokemon) {
+int combat_pokemon(Pokemon *enemyPokemon) {
 
-    //todo: ASSIGNED: start PC with a small number of potions, revives, and pokeballs
+    //todo: ASSIGNED: show pokemon health in switch pokemon
     //todo: ASSIGNED: implement bag
         //todo: ^: choose item (not used yet) or go back
         //todo: ^: are you sure question
@@ -2384,7 +2390,7 @@ int combat_pokemon(Pokemon *pokemon) {
                         actionSelected = true;
                     }
                 case 'B':
-                    if (bag_action() == 0) {
+                    if (bag_action(true, selectedPokemon, enemyPokemon) == 0) {
                         actionSelected = true;
                     }
                 case 'R':
@@ -2400,6 +2406,15 @@ int combat_pokemon(Pokemon *pokemon) {
             }
         }
     }
+
+    return 0;
+
+}
+
+int battlePause() {
+
+    std::chrono::seconds dura(5);
+    std::this_thread::sleep_for(dura);
 
     return 0;
 
@@ -2465,6 +2480,7 @@ Pokemon * switch_pokemon_action() {
     }
     interface->refreshUI();
 
+    //user's choice
     while (true) {
         const char input = interface->getchUI();
         if (input > 0 && input <= player_character->activePokemon.size()) {
@@ -2506,7 +2522,97 @@ Pokemon * switch_pokemon_action() {
 
 }
 
-int bag_action() {
+int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyPokemon) {
+
+    //show bag choices
+    interface->clearUI();
+    interface->addstrUI("Select a bag item by inputting the corresponding number or press esc to go back.");
+    interface->mvaddstrUI(1, 0, "1. Potions: ");
+    interface->addstrUI(std::to_string(player_character->bag->numPotions).c_str());
+    interface->mvaddstrUI(2, 0, "2. Revives: ");
+    interface->addstrUI(std::to_string(player_character->bag->numRevives).c_str());
+    interface->mvaddstrUI(3, 0, "3. Pokeballs: ");
+    interface->addstrUI(std::to_string(player_character->bag->numPokeballs).c_str());
+    interface->refreshUI();
+
+    //user's choice
+    while (true) {
+        const char input = interface->getchUI();
+        std::string message;
+        if (input == '1') {
+            if (player_character->bag->usePotion(selectedPokemon) == 0) {
+                return 0;
+            }
+            else {
+                message = "You have 0 potions. Select a bag item by inputting the corresponding number or press esc to go back.";
+            }
+        }
+        else if (input == '2') {
+            int reviveUsage = player_character->bag->useRevive(selectedPokemon);
+            if (reviveUsage == 0) {
+                return 0;
+            }
+            else if (reviveUsage == 1) {
+                message = "You have 0 revives. Select a bag item by inputting the corresponding number or press esc to go back.";
+            }
+            else {
+                message = "The pokemon doesn't need a revive. Select a bag item by inputting the corresponding number or press esc to go back.";
+            }
+        }
+        else if (input == '3') {
+            int pokeballUsage = player_character->bag->usePokeball(player_character->activePokemon);
+            if (pokeballUsage == 0) {
+                if (wildPokemonBattle) {
+                    usePokeball(true, enemyPokemon);
+                    return 0;
+                }
+                else {
+                    message = "You cannot use a pokeball during a trainer battle. Select a bag item by inputting the corresponding number or press esc to go back.";
+                }
+            }
+            else if (pokeballUsage == 1) {
+                message = "You have 0 pokeballs. Select a bag item by inputting the corresponding number or press esc to go back.";
+            }
+            else {
+                usePokeball(false, enemyPokemon);
+                return 0;
+            }
+        }
+        else if (input == 27) {
+            return 1;
+        }
+        else {
+            message = "Invalid input. Select a bag item by inputting the corresponding number or press esc to go back.";
+        }
+        interface->clearUI();
+        interface->addstrUI(message.c_str());
+        interface->mvaddstrUI(1, 0, "1. Potions: ");
+        interface->addstrUI(std::to_string(player_character->bag->numPotions).c_str());
+        interface->mvaddstrUI(2, 0, "2. Revives: ");
+        interface->addstrUI(std::to_string(player_character->bag->numRevives).c_str());
+        interface->mvaddstrUI(3, 0, "3. Pokeballs: ");
+        interface->addstrUI(std::to_string(player_character->bag->numPokeballs).c_str());
+        interface->refreshUI();
+    }
+
+}
+
+int usePokeball(bool success, Pokemon *targetPokemon) {
+
+    interface->clearUI();
+    if (success) {
+        player_character->activePokemon.push_back(targetPokemon);
+        interface->addstrUI("You have captured ");
+        interface->addstrUI(targetPokemon->pokemonInfo->name.c_str());
+        interface->addstrUI("!");
+    }
+    else {
+        interface->addstrUI("You have failed capture ");
+        interface->addstrUI(targetPokemon->pokemonInfo->name.c_str());
+        interface->addstrUI("!");
+    }
+    interface->refreshUI();
+    battlePause();
 
     return 0;
 
