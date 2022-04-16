@@ -566,6 +566,8 @@ public:
     int special_defense_iv = rand() % 16;
     int speed_iv = rand() % 16;
     int level;
+    int maxHealth;
+    int health;
     Move *move1 = NULL;
     Move *move2 = NULL;
     bool male;
@@ -577,10 +579,13 @@ public:
             bool shiny) :
             pokemonInfo(pokemonInfo), base_health(base_health), base_attack(base_attack), base_defense(base_defense),
             base_speed(base_speed), base_special_attack(base_special_attack), base_special_defense(base_special_defense),
-            level(level), move1(move1), move2(move2), male(male), shiny(shiny) {}
+            level(level), move1(move1), move2(move2), male(male), shiny(shiny) {
+        this->maxHealth = ((base_health + health_iv) * 2 * level) / 100 + level + 10;
+        this->health = maxHealth;
+    }
 
     int getHealth() {
-        return ((base_health + health_iv) * 2 * level) / 100 + level + 10;
+        return health;
     }
 
     int getAttack() {
@@ -603,6 +608,72 @@ public:
         return ((base_speed + speed_iv) * 2 * level) / 100 + 5;
     }
 
+    int heal(int amount) {
+        this->health += amount;
+        if (health > maxHealth) {
+            health = maxHealth;
+        }
+    }
+
+    bool revive() {
+        if (!this->knockedOut) {
+            return false;
+        }
+        else {
+            this->knockedOut = false;
+            this->health = this->maxHealth / 2;
+        }
+    }
+
+};
+
+class Bag{
+public:
+    int numPotions;
+    int numRevives;
+    int numPokeballs;
+
+    Bag() {
+        this->numPotions = 3 + rand() % 3;
+        this->numRevives = 1 + rand() % 2;
+        this->numPokeballs = 1 + rand() % 2;
+    }
+
+    int usePotion(Pokemon *pokemon) {
+        if (numPotions > 0) {
+            pokemon->heal(20);
+            numPotions--;
+            return 0;
+        }
+        else {
+            return 1;
+        }
+    }
+
+    int useRevive(Pokemon *pokemon) {
+        if (numPotions > 0) {
+            if (pokemon->revive()) {
+                return 0;
+                numRevives--;
+            }
+            else {
+                return 2;
+            }
+        }
+        else {
+            return 1;
+        }
+    }
+
+    bool usePokeball(std::vector<Pokemon *> activePokemon) {
+        if (activePokemon.size() < 6) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
 };
 
 class Character {
@@ -620,12 +691,15 @@ public:
     int in_building;
     int defeated;
     std::vector<Pokemon *> activePokemon;
+    Bag *bag;
 
     Character(int x, int y, enum  character_type type_enum, std::string type_string, char printable_character, short color,
               int turn, int direction_set, int x_direction, int y_direction, int in_building, int defeated) : x(x), y(y),
               type_enum(type_enum), type_string(type_string), printable_character(printable_character), color(color),
               turn(turn), direction_set(direction_set), x_direction(x_direction), y_direction(y_direction),
-              in_building(in_building), defeated(defeated) {}
+              in_building(in_building), defeated(defeated) {
+        bag = new Bag();
+    }
 };
 
 class PlayerCharacter : public Character {
@@ -2273,7 +2347,6 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *pokemon) {
 
-    //todo: ASSIGNED: cannot select knocked out activePokemon
     //todo: ASSIGNED: start PC with a small number of potions, revives, and pokeballs
     //todo: ASSIGNED: implement bag
         //todo: ^: choose item (not used yet) or go back
@@ -2382,7 +2455,7 @@ Pokemon * switch_pokemon_action() {
     //shows activePokemon choices
     int line = 0;
     interface->clearUI();
-    interface->mvaddstrUI(line, 0, "Select a activePokemon by inputting the corresponding number or press esc to go back.");
+    interface->mvaddstrUI(line, 0, "Select a pokemon by inputting the corresponding number or press esc to go back.");
     line++;
     for (int i = 0; i < player_character->activePokemon.size(); i++) {
         interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
@@ -2402,7 +2475,7 @@ Pokemon * switch_pokemon_action() {
             else {
                 int line = 0;
                 interface->clearUI();
-                interface->mvaddstrUI(line, 0, "That pokemon is knocked out. Please input a number corresponding to a activePokemon or esc to go back.");
+                interface->mvaddstrUI(line, 0, "That pokemon is knocked out. Please input a number corresponding to a pokemon or esc to go back.");
                 line++;
                 for (int i = 0; i < player_character->activePokemon.size(); i++) {
                     interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
