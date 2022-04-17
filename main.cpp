@@ -882,6 +882,7 @@ public:
     void initializeTerminalUI() {}
     void endwinUI() {}
     char getchUI() {
+        std::cout << "\n";
         char c;
         std::cin >> c;
         return c;
@@ -929,7 +930,7 @@ struct heap turn_heap;
 int main(int argc, char *argv[]) {
 
     //todo: ASSIGNED: change to Ncurses on submission
-    interface = new NoNcurses();
+    interface = new Ncurses();
 
     //get arguments
 //    int opt = 0;
@@ -2363,10 +2364,7 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *enemyPokemon) {
 
-    //todo: ASSIGNED: show pokemon health in switch pokemon
-    //todo: ASSIGNED: implement bag
-        //todo: ^: choose item (not used yet) or go back
-        //todo: ^: are you sure question
+    //todo: ASSIGNED: end combat upon capture of wild pokemon
     //todo: ASSIGNED: implement run
         //todo: ^: set run to true
         //todo: ^: are you sure question
@@ -2486,6 +2484,9 @@ Pokemon * switch_pokemon_action() {
         interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
         interface->addstrUI(". ");
         interface->addstrUI(player_character->activePokemon.at(i)->pokemonInfo->name.c_str());
+        interface->addstrUI(" ");
+        interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->getHealth()).c_str());
+        interface->addstrUI(" HP");
         line++;
     }
     interface->refreshUI();
@@ -2507,6 +2508,9 @@ Pokemon * switch_pokemon_action() {
                     interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
                     interface->addstrUI(". ");
                     interface->addstrUI(player_character->activePokemon.at(i)->pokemonInfo->name.c_str());
+                    interface->addstrUI(" ");
+                    interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->getHealth()).c_str());
+                    interface->addstrUI(" HP");
                     line++;
                 }
                 interface->refreshUI();
@@ -2609,6 +2613,7 @@ int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyP
 
 int usePokeball(bool success, Pokemon *targetPokemon) {
 
+    player_character->bag->numPokeballs--;
     interface->clearUI();
     if (success) {
         player_character->activePokemon.push_back(targetPokemon);
