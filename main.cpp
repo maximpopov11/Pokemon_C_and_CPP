@@ -2430,6 +2430,16 @@ int combat_pokemon(Pokemon *enemyPokemon) {
             interface->refreshUI();
         }
     }
+    else {
+        interface->clearUI();
+        interface->addstrUI("Defeat! You have been defeated by the wild pokemon! Press esc to continue.");
+        interface->refreshUI();
+        while (interface->getchUI() != 27) {
+            interface->clearUI();
+            interface->addstrUI("Invalid input. You lost the battle. Press esc to continue.");
+            interface->refreshUI();
+        }
+    }
 
     return 0;
 
