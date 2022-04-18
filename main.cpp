@@ -786,12 +786,12 @@ int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
 int combat_trainer(Character *from_character, Character *to_character);
 Pokemon * create_pokemon();
-int combat_pokemon(Pokemon *enemyPokemon);
+int combat_pokemon(Pokemon *wildPokemon);
 int fight_action(Pokemon *selectedPokemon);
 Pokemon * switch_pokemon_action();
 int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyPokemon);
 int usePokeball(bool success, Pokemon *targetPokemon);
-int run_action();
+int run_action(Pokemon *characterPokemon, Pokemon *wildPokemon, int numAttempts);
 int enter_center();
 int enter_mart();
 int change_tile(int x, int y);
@@ -2362,11 +2362,8 @@ Pokemon * create_pokemon() {
 
 }
 
-int combat_pokemon(Pokemon *enemyPokemon) {
+int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: ASSIGNED: implement run
-        //todo: ^: set run to true
-        //todo: ^: are you sure question
     //todo: ASSIGNED: do combat
         //todo: ^: if not pokemon move, do it
         //todo: ^: determine attack order if both are pokemon moves
@@ -2375,16 +2372,22 @@ int combat_pokemon(Pokemon *enemyPokemon) {
         //todo: ^: if pokemon health goes to 0 knock it out and do not set hp below 0
         //todo: ^: attacks have a chance to miss
     //todo: ASSIGNED: determine if end conditions met
+    //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out, if has any revives first offer to use them before saying can't use pokemon
     //todo: ASSIGNED: use bag outside of battle
 
     bool victory = false;
     bool battleOver = false;
+    int numRunAttempts = 0;
     Pokemon *selectedPokemon = player_character->activePokemon.at(0);
     while (!battleOver) {
         bool actionSelected = false;
         while (!actionSelected) {
             int bagResult;
+            int runResult;
             interface->clearUI();
+            interface->addstrUI("You have found a wild ");
+            interface->addstrUI(wildPokemon->pokemonInfo->name.c_str());
+            interface->addstrUI("!\n");
             interface->addstrUI("Input a command: 'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
             interface->refreshUI();
             const char input = interface->getchUI();
@@ -2400,7 +2403,7 @@ int combat_pokemon(Pokemon *enemyPokemon) {
                     }
                     break;
                 case 'B':
-                    bagResult = bag_action(true, selectedPokemon, enemyPokemon);
+                    bagResult = bag_action(true, selectedPokemon, wildPokemon);
                     if (bagResult == 0) {
                         actionSelected = true;
                     }
@@ -2411,7 +2414,13 @@ int combat_pokemon(Pokemon *enemyPokemon) {
                     }
                     break;
                 case 'R':
-                    if (run_action() == 0) {
+                    runResult = run_action(selectedPokemon, wildPokemon, numRunAttempts);
+                    if (runResult == 0) {
+                        actionSelected = true;
+                        victory = false;
+                        battleOver = true;
+                    }
+                    else if (runResult == 1) {
                         actionSelected = true;
                     }
                     break;
@@ -2666,9 +2675,44 @@ int usePokeball(bool success, Pokemon *targetPokemon) {
 
 }
 
-int run_action() {
+int run_action(Pokemon *characterPokemon, Pokemon *wildPokemon, int numAttempts) {
 
-    return 0;
+    //confirm run away
+    interface->clearUI();
+    interface->addstrUI("Are you sure you wish to run away from this battle? (y/n)");
+    interface->refreshUI();
+    while (true) {
+        char input = interface->getchUI();
+        if (input == 'y') {
+            break;
+        } else if (input == 'n') {
+            return -1;
+        } else {
+            interface->clearUI();
+            interface->addstrUI("That is not a valid input. Do you wish to run away? (y/n)");
+            interface->refreshUI();
+        }
+    }
+
+    //calculate odds of escape
+    int oddsEscape = (characterPokemon->getSpeed() * 32 / ((int)(wildPokemon->getSpeed()) % 256)) + 30 * numAttempts;
+    bool succeeded = rand() % 256 < oddsEscape;
+
+    //print status message
+    if (succeeded) {
+        interface->clearUI();
+        interface->addstrUI("You have successfully run away!");
+        interface->refreshUI();
+        battlePause();
+        return 0;
+    }
+    else {
+        interface->clearUI();
+        interface->addstrUI("You were too slow to run away!");
+        interface->refreshUI();
+        battlePause();
+        return 1;
+    }
 
 }
 
