@@ -2364,8 +2364,7 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *enemyPokemon) {
 
-    //todo: BUG: combat no longer ends after pokemon capture (broken on break on cases bug)
-    //todo: BUG: using revive prints has 0 error when doesn't have 0
+    //todo: BUG: using acts as having 0 revives left when doesn't have 0
     //todo: ASSIGNED: implement run
         //todo: ^: set run to true
         //todo: ^: are you sure question
@@ -2407,6 +2406,7 @@ int combat_pokemon(Pokemon *enemyPokemon) {
                         actionSelected = true;
                     }
                     else if (bagResult == -1) {
+                        actionSelected = true;
                         victory = true;
                         battleOver = true;
                     }
