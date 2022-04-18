@@ -2364,7 +2364,7 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *enemyPokemon) {
 
-    //todo: ASSIGNED: end combat upon capture of wild pokemon
+    //todo: ASSIGNED: test capture pokemon -> win
     //todo: ASSIGNED: implement run
         //todo: ^: set run to true
         //todo: ^: are you sure question
@@ -2376,14 +2376,15 @@ int combat_pokemon(Pokemon *enemyPokemon) {
         //todo: ^: if pokemon health goes to 0 knock it out and do not set hp below 0
         //todo: ^: attacks have a chance to miss
     //todo: ASSIGNED: determine if end conditions met
-    //todo: ASSIGNED: completed battle screen with result esp to leave
     //todo: ASSIGNED: use bag outside of battle
 
+    bool victory = false;
     bool battleOver = false;
     Pokemon *selectedPokemon = player_character->activePokemon.at(0);
     while (!battleOver) {
         bool actionSelected = false;
         while (!actionSelected) {
+            int bagResult;
             interface->clearUI();
             interface->addstrUI("Input a command: 'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
             interface->refreshUI();
@@ -2398,8 +2399,13 @@ int combat_pokemon(Pokemon *enemyPokemon) {
                         actionSelected = true;
                     }
                 case 'B':
-                    if (bag_action(true, selectedPokemon, enemyPokemon) == 0) {
+                    bagResult = bag_action(true, selectedPokemon, enemyPokemon);
+                    if (bagResult == 0) {
                         actionSelected = true;
+                    }
+                    else if (bagResult == -1) {
+                        victory = true;
+                        battleOver = true;
                     }
                 case 'R':
                     if (run_action() == 0) {
@@ -2412,6 +2418,16 @@ int combat_pokemon(Pokemon *enemyPokemon) {
                                         "\n'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
                     interface->refreshUI();
             }
+        }
+    }
+    if (victory) {
+        interface->clearUI();
+        interface->addstrUI("Victory! You have defeated the wild pokemon! Press esc to continue.");
+        interface->refreshUI();
+        while (interface->getchUI() != 27) {
+            interface->clearUI();
+            interface->addstrUI("Invalid input. You won the battle. Press esc to continue.");
+            interface->refreshUI();
         }
     }
 
@@ -2577,8 +2593,7 @@ int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyP
             int pokeballUsage = player_character->bag->usePokeball(player_character->activePokemon);
             if (pokeballUsage == 0) {
                 if (wildPokemonBattle) {
-                    usePokeball(true, enemyPokemon);
-                    return 0;
+                    return usePokeball(true, enemyPokemon);
                 }
                 else {
                     message = "You cannot use a pokeball during a trainer battle. Select a bag item by inputting the corresponding number or press esc to go back.";
@@ -2620,16 +2635,19 @@ int usePokeball(bool success, Pokemon *targetPokemon) {
         interface->addstrUI("You have captured ");
         interface->addstrUI(targetPokemon->pokemonInfo->name.c_str());
         interface->addstrUI("!");
+        interface->refreshUI();
+        battlePause();
+        return -1;
     }
     else {
         interface->addstrUI("You have failed capture ");
         interface->addstrUI(targetPokemon->pokemonInfo->name.c_str());
         interface->addstrUI("!");
-    }
-    interface->refreshUI();
-    battlePause();
+        interface->refreshUI();
+        battlePause();
 
-    return 0;
+        return 0;
+    }
 
 }
 
