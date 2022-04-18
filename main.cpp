@@ -2364,8 +2364,7 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *enemyPokemon) {
 
-    //todo: BUG: change pokemon selection considers valid int input invalid (esc is accepted, 1 is not)
-    //todo: BUG: action esc goes to next case (fight -> select pokemon -> bag -> run)
+    //todo: BUG: using revive prints has 0 error when doesn't have 0
     //todo: ASSIGNED: implement run
         //todo: ^: set run to true
         //todo: ^: are you sure question
@@ -2395,10 +2394,12 @@ int combat_pokemon(Pokemon *enemyPokemon) {
                     if (fight_action(selectedPokemon) != 0) {
                         actionSelected = true;
                     }
+                    break;
                 case 'S':
                     if (switch_pokemon_action() != NULL) {
                         actionSelected = true;
                     }
+                    break;
                 case 'B':
                     bagResult = bag_action(true, selectedPokemon, enemyPokemon);
                     if (bagResult == 0) {
@@ -2408,10 +2409,12 @@ int combat_pokemon(Pokemon *enemyPokemon) {
                         victory = true;
                         battleOver = true;
                     }
+                    break;
                 case 'R':
                     if (run_action() == 0) {
                         actionSelected = true;
                     }
+                    break;
                 default:
                     interface->clearUI();
                     interface->addstrUI(&input);
