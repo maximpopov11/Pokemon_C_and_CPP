@@ -2364,7 +2364,8 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *enemyPokemon) {
 
-    //todo: ASSIGNED: test capture pokemon -> win
+    //todo: BUG: change pokemon selection considers valid int input invalid (esc is accepted, 1 is not)
+    //todo: BUG: action esc goes to next case (fight -> select pokemon -> bag -> run)
     //todo: ASSIGNED: implement run
         //todo: ^: set run to true
         //todo: ^: are you sure question
@@ -2520,8 +2521,9 @@ Pokemon * switch_pokemon_action() {
     //user's choice
     while (true) {
         const char input = interface->getchUI();
-        if (input > 0 && input <= player_character->activePokemon.size()) {
-            Pokemon * pokemon = player_character->activePokemon.at(input - '0' - 1);
+        int inputInt = input - '0';
+        if (inputInt > 0 && inputInt <= player_character->activePokemon.size()) {
+            Pokemon * pokemon = player_character->activePokemon.at( inputInt- 1);
             if (pokemon->knockedOut == false) {
                 return pokemon;
             }
