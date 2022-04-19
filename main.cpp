@@ -2390,11 +2390,14 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: ASSIGNED: determine if end conditions met
+    //todo: BUG: if end conditions met early (pokeball capture or run away) end battle, do not allow captured pokemon to attack one last time
+    //todo: BUG: switch pokemon does not switch pokemon neither immediately (to take damage from wild) nor later (to use moves)
+    //todo: ASSIGNED: cannot attack with a knocked out pokemon, requires PC to do one of the other 3 actions
     //todo: ASSIGNED: print message for EVERY return (ex. successful potion action doesn't print)
     //todo: ASSIGNED: if all pokemon knocked out before battle starts immediately lose
     //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out, if has any revives first offer to use them before saying can't use pokemon
     //todo: ASSIGNED: use bag outside of battle
+    //todo: ASSIGNED: use word faint instead of knock out in messages
 
     bool victory = false;
     bool battleOver = false;
@@ -2458,7 +2461,23 @@ int combat_pokemon(Pokemon *wildPokemon) {
         }
         int wildPokemonMoveIndex = getWildPokemonMove(wildPokemon);
         doCombat(selectedPokemon, moveIndex, wildPokemon, wildPokemonMoveIndex);
-        //todo: ASSIGNED: check if battle is over
+        if (wildPokemon->knockedOut) {
+            victory = true;
+            battleOver = true;
+        }
+        else {
+            bool noActivePokemonRemaining = true;
+            for (int i = 0; i < player_character->activePokemon.size(); i++) {
+                if (!player_character->activePokemon.at(i)->knockedOut) {
+                    noActivePokemonRemaining = false;
+                    break;
+                }
+            }
+            if (noActivePokemonRemaining) {
+                victory = false;
+                battleOver = true;
+            }
+        }
     }
     if (victory) {
         interface->clearUI();
@@ -2711,6 +2730,7 @@ int fight_action(Pokemon *selectedPokemon) {
 
 Pokemon * switch_pokemon_action() {
 
+    //todo: ASSIGNED: when recalling a pokemon, when knocked out, or when battle ends, lose all status effects and conditions
     //shows pokemon choices
     int line = 0;
     interface->clearUI();
@@ -2722,6 +2742,9 @@ Pokemon * switch_pokemon_action() {
         interface->addstrUI(player_character->activePokemon.at(i)->pokemonInfo->name.c_str());
         interface->addstrUI(" ");
         interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->getHealth()).c_str());
+        interface->addstrUI("/");
+        interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->maxHealth).c_str());
+        interface->addstrUI(" ");
         interface->addstrUI(" HP");
         line++;
     }
