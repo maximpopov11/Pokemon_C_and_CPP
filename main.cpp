@@ -569,18 +569,17 @@ public:
     int level;
     int maxHealth;
     int health;
-    Move *move1 = NULL;
-    Move *move2 = NULL;
+    std::vector<Move *> moves;
     bool male;
     bool shiny;
     bool knockedOut = false;
 
     Pokemon(PokemonInfo *pokemonInfo, int base_health, int base_attack, int base_defense, int base_speed,
-            int base_special_attack, int base_special_defense, int level, Move *move1, Move *move2, bool male,
+            int base_special_attack, int base_special_defense, int level, std::vector<Move *> moves, bool male,
             bool shiny) :
             pokemonInfo(pokemonInfo), base_health(base_health), base_attack(base_attack), base_defense(base_defense),
             base_speed(base_speed), base_special_attack(base_special_attack), base_special_defense(base_special_defense),
-            level(level), move1(move1), move2(move2), male(male), shiny(shiny) {
+            level(level), moves(moves), male(male), shiny(shiny) {
         this->maxHealth = ((base_health + health_iv) * 2 * level) / 100 + level + 10;
         this->health = maxHealth;
     }
@@ -2339,17 +2338,18 @@ Pokemon * create_pokemon() {
             legalMoves.push_back(allMoves[i]);
         }
     }
-    Move *move1 = NULL;
-    Move *move2 = NULL;
+    std::vector<Move *> moves;
     if (legalMoves.size() == 1) {
-        move1 = legalMoves[0];
+        moves.push_back(legalMoves[0]);
     }
     else {
-        move1 = legalMoves[rand() % legalMoves.size()];
-        move2 = legalMoves[rand() % legalMoves.size()];
+        Move *move1 = legalMoves[rand() % legalMoves.size()];
+        Move *move2 = legalMoves[rand() % legalMoves.size()];
         while (move2 == move1) {
             move2 = legalMoves[rand() % legalMoves.size()];
         }
+        moves.push_back(move1);
+        moves.push_back(move2);
     }
     bool male = rand() % 2;
     bool shiny = false;
@@ -2358,12 +2358,13 @@ Pokemon * create_pokemon() {
     }
 
     return new Pokemon(pokemonInfo, base_health, base_attack, base_defense, base_speed, base_special_attack,
-                       base_special_defense, level, move1, move2, male, shiny);
+                       base_special_defense, level, moves, male, shiny);
 
 }
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
+    //todo: BUG: fight choose move int input not accepted
     //todo: ASSIGNED: do combat
         //todo: ^: if not pokemon move, do it
         //todo: ^: determine attack order if both are pokemon moves
@@ -2393,7 +2394,7 @@ int combat_pokemon(Pokemon *wildPokemon) {
             const char input = interface->getchUI();
             switch (input) {
                 case 'F':
-                    if (fight_action(selectedPokemon) != 0) {
+                    if (fight_action(selectedPokemon) != -1) {
                         actionSelected = true;
                     }
                     break;
@@ -2460,6 +2461,8 @@ int combat_pokemon(Pokemon *wildPokemon) {
 
 int battlePause() {
 
+    //todo: ASSIGNED: do esc for message rather than forced pause
+
     std::chrono::seconds dura(5);
     std::this_thread::sleep_for(dura);
 
@@ -2475,36 +2478,42 @@ int battlePause() {
 int fight_action(Pokemon *selectedPokemon) {
 
     //shows pokemon moves
+    int line = 0;
     interface->clearUI();
-    interface->addstrUI("Select a move by inputting the number corresponding to the move or press esc to go back.");
-    interface->mvaddstrUI(1, 0, "Move 1: ");
-    interface->addstrUI(selectedPokemon->move1->name.c_str());
-    if (selectedPokemon->move2 != NULL) {
-        interface->mvaddstrUI(2, 0, "Move 2: ");
-        interface->addstrUI(selectedPokemon->move2->name.c_str());
+    interface->mvaddstrUI(line, 0,"Select a move by inputting the number corresponding to the move"
+                                  "or press esc to go back.");
+    line++;
+    for (int i = 0; i < selectedPokemon->moves.size(); i++) {
+        interface->mvaddstrUI(line, 0, "Move ");
+        interface->addstrUI(std::to_string(i+1).c_str());
+        interface->addstrUI(": ");
+        interface->addstrUI(selectedPokemon->moves.at(i)->name.c_str());
+        line++;
     }
     interface->refreshUI();
 
     //chose a move
     while (true) {
         const char input = interface->getchUI();
-        if (input == '1') {
-            return 1;
-        }
-        else if (selectedPokemon->move2 != NULL && input == '2') {
-            return 2;
+        int inputInt = input - '0';
+        if (inputInt > 0 && inputInt <= selectedPokemon->moves.size()) {
+            return inputInt - 1;
         }
         else if (input == 27) {
-            return 0;
+            return -1;
         }
         else {
+            line = 0;
             interface->clearUI();
-            interface->mvaddstrUI(0, 0, &input);
-            interface->addstrUI(" is not a valid input. Press a number corresponding to a move or esc to go back.");    interface->mvaddstrUI(1, 0, "Move 1: ");
-            interface->addstrUI(selectedPokemon->move1->name.c_str());
-            if (selectedPokemon->move2 != NULL) {
-                interface->mvaddstrUI(2, 0, "Move 2: ");
-                interface->addstrUI(selectedPokemon->move2->name.c_str());
+            interface->mvaddstrUI(line, 0, &input);
+            interface->addstrUI(" is not a valid input. Press a number corresponding to a move or esc to go back.");
+            line++;
+            for (int i = 0; i < selectedPokemon->moves.size(); i++) {
+                interface->mvaddstrUI(line, 0, "Move ");
+                interface->addstrUI(std::to_string(i+1).c_str());
+                interface->addstrUI(": ");
+                interface->addstrUI(selectedPokemon->moves.at(i)->name.c_str());
+                line++;
             }
             interface->refreshUI();
         }
@@ -3362,26 +3371,26 @@ int select_pokemon(Character *playerCharacter) {
     lineNumber++;
 
     interface->mvaddstrUI(lineNumber, 0, "Move 1: ");
-    interface->mvaddstrUI(lineNumber, 20, pokemon1->move1->name.c_str());
-    interface->mvaddstrUI(lineNumber, 40, pokemon2->move1->name.c_str());
-    interface->mvaddstrUI(lineNumber, 60, pokemon3->move1->name.c_str());
+    interface->mvaddstrUI(lineNumber, 20, pokemon1->moves.at(0)->name.c_str());
+    interface->mvaddstrUI(lineNumber, 40, pokemon2->moves.at(0)->name.c_str());
+    interface->mvaddstrUI(lineNumber, 60, pokemon3->moves.at(0)->name.c_str());
     lineNumber++;
 
     interface->mvaddstrUI(lineNumber, 0, "Move 2: ");
-    if (pokemon1->move2 != NULL) {
-        interface->mvaddstrUI(lineNumber, 20, pokemon1->move2->name.c_str());
+    if (pokemon1->moves.size() > 1) {
+        interface->mvaddstrUI(lineNumber, 20, pokemon1->moves.at(1)->name.c_str());
     }
     else {
         interface->mvaddstrUI(lineNumber, 20, "none");
     }
-    if (pokemon1->move2 != NULL) {
-        interface->mvaddstrUI(lineNumber, 40, pokemon2->move2->name.c_str());
+    if (pokemon1->moves.size() > 1) {
+        interface->mvaddstrUI(lineNumber, 40, pokemon2->moves.at(1)->name.c_str());
     }
     else {
         interface->mvaddstrUI(lineNumber, 40, "none");
     }
-    if (pokemon1->move2 != NULL) {
-        interface->mvaddstrUI(lineNumber, 60, pokemon3->move2->name.c_str());
+    if (pokemon1->moves.size() > 1) {
+        interface->mvaddstrUI(lineNumber, 60, pokemon3->moves.at(1)->name.c_str());
     }
     else {
         interface->mvaddstrUI(lineNumber, 60, "none");
