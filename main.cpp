@@ -584,7 +584,6 @@ public:
             level(level), moves(moves), male(male), shiny(shiny) {
         this->maxHealth = ((base_health + health_iv) * 2 * level) / 100 + level + 10;
         this->health = maxHealth;
-        //todo: ASSIGNED: set types
     }
 
     int getHealth() {
@@ -2403,7 +2402,7 @@ int combat_pokemon(Pokemon *wildPokemon) {
     Pokemon *selectedPokemon = player_character->activePokemon.at(0);
     while (!battleOver) {
         bool actionSelected = false;
-        int moveIndex;
+        int moveIndex = -1;
         while (!actionSelected) {
             int bagResult;
             int runResult;
@@ -2457,7 +2456,6 @@ int combat_pokemon(Pokemon *wildPokemon) {
                     interface->refreshUI();
             }
         }
-        actionSelected = false;
         int wildPokemonMoveIndex = getWildPokemonMove(wildPokemon);
         doCombat(selectedPokemon, moveIndex, wildPokemon, wildPokemonMoveIndex);
         //todo: ASSIGNED: check if battle is over
@@ -2568,7 +2566,6 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon) 
     Move *move = attackingPokemon->moves.at(moveIndex);
 
     //determine if hits or evaded
-    //todo: BUG: only 1 pokemon attacks even when both should (both chosen, no knock out)
     bool hit = rand() % 100 < move->accuracy;
 
     int line = 0;
@@ -2901,14 +2898,14 @@ int run_action(Pokemon *characterPokemon, Pokemon *wildPokemon, int numAttempts)
     //print status message
     if (succeeded) {
         interface->clearUI();
-        interface->addstrUI("You have successfully run away!");
+        interface->addstrUI("You successfully ran away!");
         interface->refreshUI();
         battlePause();
         return 0;
     }
     else {
         interface->clearUI();
-        interface->addstrUI("You were too slow to run away!");
+        interface->addstrUI("You were too slow to run away! Maybe you'll be able to next time!");
         interface->refreshUI();
         battlePause();
         return 1;
