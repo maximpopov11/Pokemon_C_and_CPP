@@ -2408,7 +2408,6 @@ int combat_pokemon(Pokemon *wildPokemon) {
             int bagResult;
             int runResult;
             //moves index = moveInput - 1
-            int moveInput;
             interface->clearUI();
             interface->addstrUI("You have found a wild ");
             interface->addstrUI(wildPokemon->pokemonInfo->name.c_str());
@@ -2418,9 +2417,8 @@ int combat_pokemon(Pokemon *wildPokemon) {
             const char input = interface->getchUI();
             switch (input) {
                 case 'F':
-                    moveInput = fight_action(selectedPokemon);
-                    moveIndex = moveInput - 1;
-                    if (moveInput != -1) {
+                    moveIndex = fight_action(selectedPokemon);
+                    if (moveIndex != -1) {
                         actionSelected = true;
                     }
                     break;
@@ -2644,7 +2642,7 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon) 
     interface->refreshUI();
     battlePause();
 
-    //todo: BUG: attacker does way too much damage (nearly 200 for a lvl 1 pokemon with 11 - 13 hp)
+    //todo: BUG: attacker does way too much damage (up to over 500 for a lvl 1 pokemon with 11 - 13 hp)
 
     return 0;
 
