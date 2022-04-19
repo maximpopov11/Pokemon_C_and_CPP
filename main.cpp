@@ -569,7 +569,9 @@ public:
     int level;
     int maxHealth;
     int health;
+    //must have between 1 and 4 moves (2 on creation if possible, 1 is always possible if not 2)
     std::vector<Move *> moves;
+    std::vector<int> typeIDs;
     bool male;
     bool shiny;
     bool knockedOut = false;
@@ -582,6 +584,7 @@ public:
             level(level), moves(moves), male(male), shiny(shiny) {
         this->maxHealth = ((base_health + health_iv) * 2 * level) / 100 + level + 10;
         this->health = maxHealth;
+        //todo: ASSIGNED: set types
     }
 
     int getHealth() {
@@ -606,6 +609,18 @@ public:
 
     int getSpeed() {
         return ((base_speed + speed_iv) * 2 * level) / 100 + 5;
+    }
+
+    int takeDamage(int amount) {
+        this->health -= amount;
+        if (health <= 0) {
+            health = 0;
+            knockedOut = true;
+            return 1;
+        }
+        else {
+            return 0;
+        }
     }
 
     int heal(int amount) {
@@ -694,6 +709,7 @@ public:
     int y_direction;
     int in_building;
     int defeated;
+    //always between 1 and 6 active pokemon (starts with 1 on PC creation, chance for more for trainers)
     std::vector<Pokemon *> activePokemon;
     Bag *bag;
 
@@ -786,6 +802,10 @@ int move_character(int x, int y, int new_x, int new_y);
 int combat_trainer(Character *from_character, Character *to_character);
 Pokemon * create_pokemon();
 int combat_pokemon(Pokemon *wildPokemon);
+int getWildPokemonMove(Pokemon *wildPokemon);
+int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *wildPokemon, int wildPokemonMoveIndex);
+int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon);
+int battlePause();
 int fight_action(Pokemon *selectedPokemon);
 Pokemon * switch_pokemon_action();
 int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyPokemon);
@@ -2357,22 +2377,23 @@ Pokemon * create_pokemon() {
         shiny = true;
     }
 
-    return new Pokemon(pokemonInfo, base_health, base_attack, base_defense, base_speed, base_special_attack,
-                       base_special_defense, level, moves, male, shiny);
+    Pokemon *pokemon = new Pokemon(pokemonInfo, base_health, base_attack, base_defense, base_speed, base_special_attack,
+                                   base_special_defense, level, moves, male, shiny);
+    for (int i = 0; i < allPokemonTypes.size(); i++) {
+        PokemonType *pokemonType = allPokemonTypes.at(i);
+        if (pokemonType->pokemon_id == pokemon->pokemonInfo->id) {
+            pokemon->typeIDs.push_back(pokemonType->type_id);
+        }
+    }
+    return pokemon;
 
 }
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: BUG: fight choose move int input not accepted
-    //todo: ASSIGNED: do combat
-        //todo: ^: if not pokemon move, do it
-        //todo: ^: determine attack order if both are pokemon moves
-        //todo: ^: do faster attack
-        //todo: ^: do slower attack if pokemon isn't knocked out
-        //todo: ^: if pokemon health goes to 0 knock it out and do not set hp below 0
-        //todo: ^: attacks have a chance to miss
+    //todo: BUG: attack move 1 (index should be 0) sent to do combat as -1
     //todo: ASSIGNED: determine if end conditions met
+    //todo: ASSIGNED: if all pokemon knocked out before battle starts immediately lose
     //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out, if has any revives first offer to use them before saying can't use pokemon
     //todo: ASSIGNED: use bag outside of battle
 
@@ -2382,9 +2403,12 @@ int combat_pokemon(Pokemon *wildPokemon) {
     Pokemon *selectedPokemon = player_character->activePokemon.at(0);
     while (!battleOver) {
         bool actionSelected = false;
+        int moveIndex;
         while (!actionSelected) {
             int bagResult;
             int runResult;
+            //moves index = moveInput - 1
+            int moveInput;
             interface->clearUI();
             interface->addstrUI("You have found a wild ");
             interface->addstrUI(wildPokemon->pokemonInfo->name.c_str());
@@ -2394,7 +2418,9 @@ int combat_pokemon(Pokemon *wildPokemon) {
             const char input = interface->getchUI();
             switch (input) {
                 case 'F':
-                    if (fight_action(selectedPokemon) != -1) {
+                    moveInput = fight_action(selectedPokemon);
+                    moveIndex = moveInput - 1;
+                    if (moveInput != -1) {
                         actionSelected = true;
                     }
                     break;
@@ -2433,10 +2459,15 @@ int combat_pokemon(Pokemon *wildPokemon) {
                     interface->refreshUI();
             }
         }
+        int wildPokemonMoveIndex = getWildPokemonMove(wildPokemon);
+        doCombat(selectedPokemon, moveIndex, wildPokemon, wildPokemonMoveIndex);
+        //todo: ASSIGNED: check if battle is over
     }
     if (victory) {
         interface->clearUI();
-        interface->addstrUI("Victory! You have defeated the wild pokemon! Press esc to continue.");
+        interface->addstrUI("Victory! You have defeated a wild ");
+        interface->addstrUI(wildPokemon->pokemonInfo->name.c_str());
+        interface->addstrUI("! Press esc to continue.");
         interface->refreshUI();
         while (interface->getchUI() != 27) {
             interface->clearUI();
@@ -2446,7 +2477,9 @@ int combat_pokemon(Pokemon *wildPokemon) {
     }
     else {
         interface->clearUI();
-        interface->addstrUI("Defeat! You have been defeated by the wild pokemon! Press esc to continue.");
+        interface->addstrUI("Defeat! You have been defeated by a wild ");
+        interface->addstrUI(wildPokemon->pokemonInfo->name.c_str());
+        interface->addstrUI("! Press esc to continue.");
         interface->refreshUI();
         while (interface->getchUI() != 27) {
             interface->clearUI();
@@ -2454,6 +2487,164 @@ int combat_pokemon(Pokemon *wildPokemon) {
             interface->refreshUI();
         }
     }
+
+    return 0;
+
+}
+
+int getWildPokemonMove(Pokemon *wildPokemon) {
+
+    return rand() % wildPokemon->moves.size();
+
+}
+
+int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *wildPokemon, int wildPokemonMoveIndex) {
+
+    //determine attack order
+    bool friendlyPokemonFirst;
+    bool bothAttack;
+    if (friendlyPokemonMoveIndex < 0 && wildPokemonMoveIndex < 0) {
+        return 0;
+    }
+    else if (friendlyPokemonMoveIndex < 0) {
+        friendlyPokemonFirst = false;
+        bothAttack = false;
+    }
+    else if (wildPokemonMoveIndex < 0) {
+        friendlyPokemonFirst = true;
+        bothAttack = false;
+    }
+    else {
+        int friendlyPokemonPriority = friendlyPokemon->moves.at(friendlyPokemonMoveIndex)->priority;
+        int wildPokemonPriority = wildPokemon->moves.at(wildPokemonMoveIndex)->priority;
+        if (friendlyPokemonPriority > wildPokemonPriority) {
+            friendlyPokemonFirst = true;
+        } else if (wildPokemonPriority > friendlyPokemonPriority) {
+            friendlyPokemonFirst = false;
+        } else {
+            int friendlyPokemonSpeed = friendlyPokemon->getSpeed();
+            int wildPokemonSpeed = wildPokemon->getSpeed();
+            if (friendlyPokemonSpeed > wildPokemonSpeed) {
+                friendlyPokemonFirst = true;
+            } else if (wildPokemonSpeed > friendlyPokemonSpeed) {
+                friendlyPokemonFirst = false;
+            } else {
+                if (rand() % 2 == 0) {
+                    friendlyPokemonFirst = true;
+                } else {
+                    friendlyPokemonFirst = false;
+                }
+            }
+        }
+    }
+
+    //do faster attack
+    if (friendlyPokemonFirst) {
+        attack(friendlyPokemon, friendlyPokemonMoveIndex, wildPokemon);
+    }
+    else {
+        attack(wildPokemon, wildPokemonMoveIndex, friendlyPokemon);
+    }
+
+    //if either pokemon is at 0 health, the second attacker is at 0 health, so we end the battle
+    if (friendlyPokemon->health == 0 || wildPokemon->health == 0) {
+        return 0;
+    }
+    //else do the second attack
+    if (bothAttack) {
+        if (!friendlyPokemonFirst) {
+            attack(friendlyPokemon, friendlyPokemonMoveIndex, wildPokemon);
+        } else {
+            attack(wildPokemon, wildPokemonMoveIndex, friendlyPokemon);
+        }
+    }
+
+    return 0;
+
+}
+
+int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon) {
+
+    Move *move = attackingPokemon->moves.at(moveIndex);
+
+    //determine if hits or evaded
+    //todo: BUG: move->accuracy is -1 in most (not all) cases
+    bool hit = rand() % 100 < move->accuracy;
+
+    int line = 0;
+    interface->clearUI();
+    interface->mvaddstrUI(line, 0, attackingPokemon->pokemonInfo->name.c_str());
+    interface->addstrUI(" used ");
+    interface->addstrUI(move->name.c_str());
+    interface->addstrUI("!");
+    line++;
+    if (hit) {
+        //do damage
+        int critical = 1;
+        if (rand() % 256 < attackingPokemon->speed_iv / 2) {
+            critical = 1.5;
+        }
+        int stab = 1;
+        bool typeMatch = false;
+        for (int i = 0; i < attackingPokemon->typeIDs.size(); i++) {
+            if (attackingPokemon->typeIDs.at(i) == move->type_id) {
+                typeMatch = true;
+                break;
+            }
+        }
+        if (typeMatch) {
+            stab = 1.5;
+        }
+        double type = 1;
+        int damage = (((2 * attackingPokemon->level / 5 + 2)
+                * move->power * attackingPokemon->getAttack() / defendingPokemon->getDefense()) / 50 + 2)
+                * critical * (rand() % 16 + 85) * stab * type;
+        int damageDealt = defendingPokemon->takeDamage(damage);
+
+        //print hit message (different if critical hit or results in knock out)
+        if (type != 1) {
+            interface->mvaddstrUI(line, 0, "It was ");
+            if (type == 0) {
+                interface->addstrUI("incredibly ");
+            }
+            else if (type == 0.25 || type == 4) {
+                interface->addstrUI("super ");
+            }
+            if (type < 1) {
+                interface->addstrUI("ineffective");
+            }
+            else {
+                //type > 1
+                interface->addstrUI("effective");
+            }
+            interface->addstrUI("!");
+            line++;
+        }
+        interface->mvaddstrUI(line, 0, defendingPokemon->pokemonInfo->name.c_str());
+        interface->addstrUI(" took ");
+        interface->addstrUI(std::to_string(damage).c_str());
+        interface->addstrUI(" damage!");
+        line++;
+    }
+    else {
+        //print no hit message
+        interface->mvaddstrUI(line, 0, "It missed!");
+        line++;
+    }
+    interface->mvaddstrUI(line, 0, defendingPokemon->pokemonInfo->name.c_str());
+    interface->addstrUI(" health: ");
+    interface->addstrUI(std::to_string(defendingPokemon->getHealth()).c_str());
+    interface->addstrUI(" / ");
+    interface->addstrUI(std::to_string(defendingPokemon->maxHealth).c_str());
+    line++;
+    if (defendingPokemon->knockedOut) {
+        interface->mvaddstrUI(line, 0, defendingPokemon->pokemonInfo->name.c_str());
+        interface->addstrUI(" has been knocked out!");
+    }
+    interface->refreshUI();
+    battlePause();
+
+    //todo: BUG: attacker does way too much damage (nearly 200 for a lvl 1 pokemon with 11 - 13 hp)
 
     return 0;
 
@@ -2480,8 +2671,7 @@ int fight_action(Pokemon *selectedPokemon) {
     //shows pokemon moves
     int line = 0;
     interface->clearUI();
-    interface->mvaddstrUI(line, 0,"Select a move by inputting the number corresponding to the move"
-                                  "or press esc to go back.");
+    interface->mvaddstrUI(line, 0,"Select a move by inputting the number corresponding to the move or press esc to go back.");
     line++;
     for (int i = 0; i < selectedPokemon->moves.size(); i++) {
         interface->mvaddstrUI(line, 0, "Move ");
