@@ -2396,7 +2396,6 @@ int combat_pokemon(Pokemon *wildPokemon) {
     //todo: ASSIGNED: if all pokemon knocked out before battle starts immediately lose
     //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out, if has any revives first offer to use them before saying can't use pokemon
     //todo: ASSIGNED: use bag outside of battle
-    //todo: ASSIGNED: use word faint instead of knock out in messages
 
     bool victory = false;
     bool battleOver = false;
@@ -2657,7 +2656,7 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon) 
     line++;
     if (defendingPokemon->knockedOut) {
         interface->mvaddstrUI(line, 0, defendingPokemon->pokemonInfo->name.c_str());
-        interface->addstrUI(" has been knocked out!");
+        interface->addstrUI(" has fainted!");
     }
     interface->refreshUI();
     battlePause();
@@ -2763,7 +2762,7 @@ Pokemon * switch_pokemon_action() {
             else {
                 int line = 0;
                 interface->clearUI();
-                interface->mvaddstrUI(line, 0, "That pokemon is knocked out. Please input a number corresponding to a pokemon or esc to go back.");
+                interface->mvaddstrUI(line, 0, "That pokemon has fainted. Please input a number corresponding to a pokemon or esc to go back.");
                 line++;
                 for (int i = 0; i < player_character->activePokemon.size(); i++) {
                     interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
