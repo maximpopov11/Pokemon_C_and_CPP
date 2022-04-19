@@ -2427,6 +2427,7 @@ int combat_pokemon(Pokemon *wildPokemon) {
                     switchResult = switch_pokemon_action(selectedPokemon);
                     if (switchResult != NULL) {
                         selectedPokemon = switchResult;
+                        actionSelected = true;
                     }
                     break;
                 case 'B':
