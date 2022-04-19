@@ -2391,8 +2391,8 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: BUG: attack move 1 (index should be 0) sent to do combat as -1
     //todo: ASSIGNED: determine if end conditions met
+    //todo: ASSIGNED: print message for EVERY return (ex. successful potion action doesn't print)
     //todo: ASSIGNED: if all pokemon knocked out before battle starts immediately lose
     //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out, if has any revives first offer to use them before saying can't use pokemon
     //todo: ASSIGNED: use bag outside of battle
@@ -2457,6 +2457,7 @@ int combat_pokemon(Pokemon *wildPokemon) {
                     interface->refreshUI();
             }
         }
+        actionSelected = false;
         int wildPokemonMoveIndex = getWildPokemonMove(wildPokemon);
         doCombat(selectedPokemon, moveIndex, wildPokemon, wildPokemonMoveIndex);
         //todo: ASSIGNED: check if battle is over
@@ -2513,6 +2514,7 @@ int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *wi
         bothAttack = false;
     }
     else {
+        bothAttack = true;
         int friendlyPokemonPriority = friendlyPokemon->moves.at(friendlyPokemonMoveIndex)->priority;
         int wildPokemonPriority = wildPokemon->moves.at(wildPokemonMoveIndex)->priority;
         if (friendlyPokemonPriority > wildPokemonPriority) {
@@ -2566,7 +2568,7 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon) 
     Move *move = attackingPokemon->moves.at(moveIndex);
 
     //determine if hits or evaded
-    //todo: BUG: move->accuracy is -1 in most (not all) cases
+    //todo: BUG: only 1 pokemon attacks even when both should (both chosen, no knock out)
     bool hit = rand() % 100 < move->accuracy;
 
     int line = 0;
@@ -2594,9 +2596,10 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon) 
             stab = 1.5;
         }
         double type = 1;
-        int damage = (((2 * attackingPokemon->level / 5 + 2)
+        double damageDouble = (((2.0 * attackingPokemon->level / 5 + 2)
                 * move->power * attackingPokemon->getAttack() / defendingPokemon->getDefense()) / 50 + 2)
-                * critical * (rand() % 16 + 85) * stab * type;
+                * critical * (rand() % 16 + 85) / 100 * stab * type;
+        int damage = (int) damageDouble;
         int damageDealt = defendingPokemon->takeDamage(damage);
 
         //print hit message (different if critical hit or results in knock out)
