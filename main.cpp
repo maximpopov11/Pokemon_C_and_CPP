@@ -806,7 +806,7 @@ int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *wi
 int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon);
 int battlePause();
 int fight_action(Pokemon *selectedPokemon);
-Pokemon * switch_pokemon_action();
+Pokemon *switch_pokemon_action(Pokemon *selectedPokemon);
 int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyPokemon);
 int usePokeball(bool success, Pokemon *targetPokemon);
 int run_action(Pokemon *characterPokemon, Pokemon *wildPokemon, int numAttempts);
@@ -2390,7 +2390,7 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: BUG: switch pokemon does not switch pokemon neither immediately (to take damage from wild) nor later (to use moves)
+    //todo: BUG: switch pokemon doesn't end turn (can switch and do other actions in one turn)
     //todo: ASSIGNED: cannot attack with a knocked out pokemon, requires PC to do one of the other 3 actions
     //todo: ASSIGNED: print message for EVERY return (ex. successful potion action doesn't print)
     //todo: ASSIGNED: if all pokemon knocked out before battle starts immediately lose
@@ -2405,6 +2405,7 @@ int combat_pokemon(Pokemon *wildPokemon) {
         bool actionSelected = false;
         int moveIndex = -1;
         while (!actionSelected) {
+            Pokemon *switchResult;
             int bagResult;
             int runResult;
             //moves index = moveInput - 1
@@ -2423,8 +2424,9 @@ int combat_pokemon(Pokemon *wildPokemon) {
                     }
                     break;
                 case 'S':
-                    if (switch_pokemon_action() != NULL) {
-                        actionSelected = true;
+                    switchResult = switch_pokemon_action(selectedPokemon);
+                    if (switchResult != NULL) {
+                        selectedPokemon = switchResult;
                     }
                     break;
                 case 'B':
@@ -2728,8 +2730,9 @@ int fight_action(Pokemon *selectedPokemon) {
 
 }
 
-Pokemon * switch_pokemon_action() {
+Pokemon *switch_pokemon_action(Pokemon *selectedPokemon) {
 
+    //todo: BUG: don't allow switch to already selected pokemon
     //todo: ASSIGNED: when recalling a pokemon, when knocked out, or when battle ends, lose all status effects and conditions
     //shows pokemon choices
     int line = 0;
