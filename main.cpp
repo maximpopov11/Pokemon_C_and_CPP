@@ -2390,7 +2390,7 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: BUG: don't allow to switch to already selected pokemon
+    //todo: BUG: don't allow non select pokemon/revive if activePokemon is knocked out
     //todo: ASSIGNED: print message for EVERY return (ex. successful potion action doesn't print)
     //todo: ASSIGNED: if all pokemon knocked out before battle starts immediately lose
     //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out, if has any revives first offer to use them before saying can't use pokemon
@@ -2747,7 +2747,6 @@ int fight_action(Pokemon *selectedPokemon) {
 
 Pokemon *switch_pokemon_action(Pokemon *selectedPokemon) {
 
-    //todo: BUG: don't allow switch to already selected pokemon
     //todo: ASSIGNED: when recalling a pokemon, when knocked out, or when battle ends, lose all status effects and conditions
     //shows pokemon choices
     int line = 0;
@@ -2774,7 +2773,23 @@ Pokemon *switch_pokemon_action(Pokemon *selectedPokemon) {
         int inputInt = input - '0';
         if (inputInt > 0 && inputInt <= player_character->activePokemon.size()) {
             Pokemon * pokemon = player_character->activePokemon.at( inputInt- 1);
-            if (pokemon->knockedOut == false) {
+            if (selectedPokemon == pokemon) {
+                int line = 0;
+                interface->clearUI();
+                interface->mvaddstrUI(line, 0, "That pokemon is already active. Please input a number corresponding to a pokemon or esc to go back.");
+                line++;
+                for (int i = 0; i < player_character->activePokemon.size(); i++) {
+                    interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
+                    interface->addstrUI(". ");
+                    interface->addstrUI(player_character->activePokemon.at(i)->pokemonInfo->name.c_str());
+                    interface->addstrUI(" ");
+                    interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->getHealth()).c_str());
+                    interface->addstrUI(" HP");
+                    line++;
+                }
+                interface->refreshUI();
+            }
+            else if (pokemon->knockedOut == false) {
                 return pokemon;
             }
             else {
