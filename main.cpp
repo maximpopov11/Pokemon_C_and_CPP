@@ -2390,7 +2390,6 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: BUG: if end conditions met early (pokeball capture or run away) end battle, do not allow captured pokemon to attack one last time
     //todo: BUG: switch pokemon does not switch pokemon neither immediately (to take damage from wild) nor later (to use moves)
     //todo: ASSIGNED: cannot attack with a knocked out pokemon, requires PC to do one of the other 3 actions
     //todo: ASSIGNED: print message for EVERY return (ex. successful potion action doesn't print)
@@ -2459,23 +2458,24 @@ int combat_pokemon(Pokemon *wildPokemon) {
                     interface->refreshUI();
             }
         }
-        int wildPokemonMoveIndex = getWildPokemonMove(wildPokemon);
-        doCombat(selectedPokemon, moveIndex, wildPokemon, wildPokemonMoveIndex);
-        if (wildPokemon->knockedOut) {
-            victory = true;
-            battleOver = true;
-        }
-        else {
-            bool noActivePokemonRemaining = true;
-            for (int i = 0; i < player_character->activePokemon.size(); i++) {
-                if (!player_character->activePokemon.at(i)->knockedOut) {
-                    noActivePokemonRemaining = false;
-                    break;
-                }
-            }
-            if (noActivePokemonRemaining) {
-                victory = false;
+        if (!battleOver) {
+            int wildPokemonMoveIndex = getWildPokemonMove(wildPokemon);
+            doCombat(selectedPokemon, moveIndex, wildPokemon, wildPokemonMoveIndex);
+            if (wildPokemon->knockedOut) {
+                victory = true;
                 battleOver = true;
+            } else {
+                bool noActivePokemonRemaining = true;
+                for (int i = 0; i < player_character->activePokemon.size(); i++) {
+                    if (!player_character->activePokemon.at(i)->knockedOut) {
+                        noActivePokemonRemaining = false;
+                        break;
+                    }
+                }
+                if (noActivePokemonRemaining) {
+                    victory = false;
+                    battleOver = true;
+                }
             }
         }
     }
@@ -2612,6 +2612,7 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon) 
             stab = 1.5;
         }
         double type = 1;
+        //todo: BUG: if move->power == -1 (not provided) set damageDouble to 0
         double damageDouble = (((2.0 * attackingPokemon->level / 5 + 2)
                 * move->power * attackingPokemon->getAttack() / defendingPokemon->getDefense()) / 50 + 2)
                 * critical * (rand() % 16 + 85) / 100 * stab * type;
