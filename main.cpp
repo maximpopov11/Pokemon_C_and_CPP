@@ -806,7 +806,7 @@ int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *wi
 int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon);
 int battlePause();
 int fight_action(Pokemon *selectedPokemon);
-Pokemon *switch_pokemon_action(Pokemon *selectedPokemon);
+Pokemon *switch_pokemon_action(Pokemon *selectedPokemon, bool mustSwitch);
 int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyPokemon);
 int usePokeball(bool success, Pokemon *targetPokemon);
 int run_action(Pokemon *characterPokemon, Pokemon *wildPokemon, int numAttempts);
@@ -2390,10 +2390,10 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: BUG: don't allow non select pokemon/revive if activePokemon is knocked out
     //todo: ASSIGNED: print message for EVERY return (ex. successful potion action doesn't print)
     //todo: ASSIGNED: if all pokemon knocked out before battle starts immediately lose
-    //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out, if has any revives first offer to use them before saying can't use pokemon
+    //todo: ASSIGNED: if all pokemon knocked out in battle, offer revive before ending battle
+    //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out (or already selected), if has any revives first offer to use them before saying can't use pokemon
     //todo: ASSIGNED: use bag outside of battle
 
     bool victory = false;
@@ -2403,61 +2403,65 @@ int combat_pokemon(Pokemon *wildPokemon) {
     while (!battleOver) {
         bool actionSelected = false;
         int moveIndex = -1;
-        while (!actionSelected) {
-            Pokemon *switchResult;
-            int bagResult;
-            int runResult;
-            //moves index = moveInput - 1
-            interface->clearUI();
-            interface->addstrUI("You have found a wild ");
-            interface->addstrUI(wildPokemon->pokemonInfo->name.c_str());
-            interface->addstrUI("!\n");
-            interface->addstrUI("Input a command: 'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
-            interface->refreshUI();
-            const char input = interface->getchUI();
-            switch (input) {
-                case 'F':
-                    moveIndex = fight_action(selectedPokemon);
-                    if (moveIndex != -1) {
-                        actionSelected = true;
-                    }
-                    break;
-                case 'S':
-                    switchResult = switch_pokemon_action(selectedPokemon);
-                    if (switchResult != NULL) {
-                        selectedPokemon = switchResult;
-                        actionSelected = true;
-                    }
-                    break;
-                case 'B':
-                    bagResult = bag_action(true, selectedPokemon, wildPokemon);
-                    if (bagResult == 0) {
-                        actionSelected = true;
-                    }
-                    else if (bagResult == -1) {
-                        actionSelected = true;
-                        victory = true;
-                        battleOver = true;
-                    }
-                    break;
-                case 'R':
-                    runResult = run_action(selectedPokemon, wildPokemon, numRunAttempts);
-                    if (runResult == 0) {
-                        actionSelected = true;
-                        victory = false;
-                        battleOver = true;
-                    }
-                    else if (runResult == 1) {
-                        actionSelected = true;
-                    }
-                    break;
-                default:
-                    interface->clearUI();
-                    interface->addstrUI(&input);
-                    interface->addstrUI(" is not a valid command."
-                                        "\n'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
-                    interface->refreshUI();
+        if (!selectedPokemon->knockedOut) {
+            while (!actionSelected) {
+                Pokemon *switchResult;
+                int bagResult;
+                int runResult;
+                //moves index = moveInput - 1
+                interface->clearUI();
+                interface->addstrUI("You have found a wild ");
+                interface->addstrUI(wildPokemon->pokemonInfo->name.c_str());
+                interface->addstrUI("!\n");
+                interface->addstrUI(
+                        "Input a command: 'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
+                interface->refreshUI();
+                const char input = interface->getchUI();
+                switch (input) {
+                    case 'F':
+                        moveIndex = fight_action(selectedPokemon);
+                        if (moveIndex != -1) {
+                            actionSelected = true;
+                        }
+                        break;
+                    case 'S':
+                        switchResult = switch_pokemon_action(selectedPokemon, false);
+                        if (switchResult != NULL) {
+                            selectedPokemon = switchResult;
+                            actionSelected = true;
+                        }
+                        break;
+                    case 'B':
+                        bagResult = bag_action(true, selectedPokemon, wildPokemon);
+                        if (bagResult == 0) {
+                            actionSelected = true;
+                        } else if (bagResult == -1) {
+                            actionSelected = true;
+                            victory = true;
+                            battleOver = true;
+                        }
+                        break;
+                    case 'R':
+                        runResult = run_action(selectedPokemon, wildPokemon, numRunAttempts);
+                        if (runResult == 0) {
+                            actionSelected = true;
+                            victory = false;
+                            battleOver = true;
+                        } else if (runResult == 1) {
+                            actionSelected = true;
+                        }
+                        break;
+                    default:
+                        interface->clearUI();
+                        interface->addstrUI(&input);
+                        interface->addstrUI(" is not a valid command."
+                                            "\n'F' to fight; 'S' to switch pokemon; 'B' to open your bag; 'R' to run away");
+                        interface->refreshUI();
+                }
             }
+        }
+        else {
+            selectedPokemon = switch_pokemon_action(selectedPokemon, true);
         }
         if (!battleOver) {
             int wildPokemonMoveIndex = getWildPokemonMove(wildPokemon);
@@ -2745,13 +2749,19 @@ int fight_action(Pokemon *selectedPokemon) {
 
 }
 
-Pokemon *switch_pokemon_action(Pokemon *selectedPokemon) {
+Pokemon *switch_pokemon_action(Pokemon *selectedPokemon, bool mustSwitch) {
 
     //todo: ASSIGNED: when recalling a pokemon, when knocked out, or when battle ends, lose all status effects and conditions
     //shows pokemon choices
     int line = 0;
     interface->clearUI();
-    interface->mvaddstrUI(line, 0, "Select a pokemon by inputting the corresponding number or press esc to go back.");
+    interface->mvaddstrUI(line, 0,"Select a pokemon by inputting the corresponding number");
+    if (mustSwitch) {
+        interface->addstrUI(".");
+    }
+    else {
+        interface->addstrUI(" or press esc to go back.");
+    }
     line++;
     for (int i = 0; i < player_character->activePokemon.size(); i++) {
         interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
@@ -2776,7 +2786,13 @@ Pokemon *switch_pokemon_action(Pokemon *selectedPokemon) {
             if (selectedPokemon == pokemon) {
                 int line = 0;
                 interface->clearUI();
-                interface->mvaddstrUI(line, 0, "That pokemon is already active. Please input a number corresponding to a pokemon or esc to go back.");
+                interface->mvaddstrUI(line, 0, "That pokemon is already active. Please input a number corresponding to a pokemon");
+                if (mustSwitch) {
+                    interface->addstrUI(".");
+                }
+                else {
+                    interface->addstrUI(" or press esc to go back.");
+                }
                 line++;
                 for (int i = 0; i < player_character->activePokemon.size(); i++) {
                     interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
@@ -2795,7 +2811,13 @@ Pokemon *switch_pokemon_action(Pokemon *selectedPokemon) {
             else {
                 int line = 0;
                 interface->clearUI();
-                interface->mvaddstrUI(line, 0, "That pokemon has fainted. Please input a number corresponding to a pokemon or esc to go back.");
+                interface->mvaddstrUI(line, 0, "That pokemon has fainted. Please input a number corresponding to a pokemon");
+                if (mustSwitch) {
+                    interface->addstrUI(".");
+                }
+                else {
+                    interface->addstrUI(" or press esc to go back.");
+                }
                 line++;
                 for (int i = 0; i < player_character->activePokemon.size(); i++) {
                     interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
@@ -2809,13 +2831,19 @@ Pokemon *switch_pokemon_action(Pokemon *selectedPokemon) {
                 interface->refreshUI();
             }
         }
-        else if (input == 27) {
+        else if (input == 27 && !mustSwitch) {
             return NULL;
         }
         else {
             int line = 0;
             interface->clearUI();
-            interface->mvaddstrUI(line, 0, "That is not a valid input. Please input a number corresponding to a pokemon or esc to go back.");
+            interface->mvaddstrUI(line, 0, "That is not a valid input. Please input a number corresponding to a pokemon");
+            if (mustSwitch) {
+                interface->addstrUI(".");
+            }
+            else {
+                interface->addstrUI(" or press esc to go back.");
+            }
             line++;
             for (int i = 0; i < player_character->activePokemon.size(); i++) {
                 interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
