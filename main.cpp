@@ -2390,8 +2390,7 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: BUG: switch pokemon doesn't end turn (can switch and do other actions in one turn)
-    //todo: ASSIGNED: cannot attack with a knocked out pokemon, requires PC to do one of the other 3 actions
+    //todo: BUG: don't allow to switch to already selected pokemon
     //todo: ASSIGNED: print message for EVERY return (ex. successful potion action doesn't print)
     //todo: ASSIGNED: if all pokemon knocked out before battle starts immediately lose
     //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out, if has any revives first offer to use them before saying can't use pokemon
@@ -2705,18 +2704,11 @@ int fight_action(Pokemon *selectedPokemon) {
     //chose a move
     while (true) {
         const char input = interface->getchUI();
-        int inputInt = input - '0';
-        if (inputInt > 0 && inputInt <= selectedPokemon->moves.size()) {
-            return inputInt - 1;
-        }
-        else if (input == 27) {
-            return -1;
-        }
-        else {
+        if(selectedPokemon->knockedOut && input != 27) {
             line = 0;
             interface->clearUI();
             interface->mvaddstrUI(line, 0, &input);
-            interface->addstrUI(" is not a valid input. Press a number corresponding to a move or esc to go back.");
+            interface->addstrUI("The active pokemon has fainted and cannot make any moves. Press esc to go back.");
             line++;
             for (int i = 0; i < selectedPokemon->moves.size(); i++) {
                 interface->mvaddstrUI(line, 0, "Move ");
@@ -2726,6 +2718,28 @@ int fight_action(Pokemon *selectedPokemon) {
                 line++;
             }
             interface->refreshUI();
+        }
+        else {
+            int inputInt = input - '0';
+            if (inputInt > 0 && inputInt <= selectedPokemon->moves.size()) {
+                return inputInt - 1;
+            } else if (input == 27) {
+                return -1;
+            } else {
+                line = 0;
+                interface->clearUI();
+                interface->mvaddstrUI(line, 0, &input);
+                interface->addstrUI(" is not a valid input. Press a number corresponding to a move or esc to go back.");
+                line++;
+                for (int i = 0; i < selectedPokemon->moves.size(); i++) {
+                    interface->mvaddstrUI(line, 0, "Move ");
+                    interface->addstrUI(std::to_string(i + 1).c_str());
+                    interface->addstrUI(": ");
+                    interface->addstrUI(selectedPokemon->moves.at(i)->name.c_str());
+                    line++;
+                }
+                interface->refreshUI();
+            }
         }
     }
 
