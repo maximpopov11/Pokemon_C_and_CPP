@@ -798,11 +798,11 @@ int storePokemonTypes();
 int turn_based_movement();
 int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
-int combat_trainer(Character *from_character, Character *to_character);
+int combat_trainer(Character *opponent);
 Pokemon * create_pokemon();
 int combat_pokemon(Pokemon *wildPokemon);
 int getWildPokemonMove(Pokemon *wildPokemon);
-int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *wildPokemon, int wildPokemonMoveIndex);
+int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *enemyPokemon, int enemyPokemonMoveIndex);
 int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon);
 int battlePause();
 int fight_action(Pokemon *selectedPokemon);
@@ -2245,10 +2245,15 @@ int move_character(int x, int y, int new_x, int new_y) {
                 return 2;
             }
             else {
-                combat_trainer(from_character, to_character);
+                if (from_character->type_enum == PLAYER) {
+                    combat_trainer(to_character);
+                }
+                else {
+                    combat_trainer(from_character);
+                }
             }
         }
-            //trainer -> trainer = no move
+        //trainer -> trainer = no move
         else {
             //this should never happen because this is checked in turn_based_movement in trainer movement
             return 1;
@@ -2271,33 +2276,130 @@ int move_character(int x, int y, int new_x, int new_y) {
 
 }
 
-int combat_trainer(Character *from_character, Character *to_character) {
+int combat_trainer(Character *opponent) {
 
     //todo: ASSIGNED: same as combat pokemon, but trainer gets choices too
 
-    if (from_character->type_enum == PLAYER) {
-        //player attacks trainer
-        to_character->defeated = 1;
-        to_character->color = COLOR_YELLOW;
+    bool victory = false;
+    bool battleOver = false;
+    int numRunAttempts = 0;
+    Pokemon *selectedPokemon = player_character->activePokemon.at(0);
+    Pokemon *trainerSelectedPokemon = opponent->activePokemon.at(0);
+    while (!battleOver) {
+        bool actionSelected = false;
+        int moveIndex = -1;
+        if (!selectedPokemon->knockedOut) {
+            while (!actionSelected) {
+                Pokemon *switchResult;
+                int bagResult;
+                int runResult;
+                //moves index = moveInput - 1
+                interface->clearUI();
+                interface->addstrUI("You have entered combat with a trainer!");
+                interface->addstrUI("\n");
+                interface->addstrUI(
+                        "Input a command: 'F' to fight; 'S' to switch pokemon; 'B' to open your bag");
+                interface->refreshUI();
+                const char input = interface->getchUI();
+                switch (input) {
+                    case 'F':
+                        moveIndex = fight_action(selectedPokemon);
+                        if (moveIndex != -1) {
+                            actionSelected = true;
+                        }
+                        break;
+                    case 'S':
+                        switchResult = switch_pokemon_action(selectedPokemon, false);
+                        if (switchResult != NULL) {
+                            selectedPokemon = switchResult;
+                            actionSelected = true;
+                        }
+                        break;
+                    case 'B':
+                        bagResult = bag_action(false, selectedPokemon, NULL);
+                        if (bagResult == 0) {
+                            actionSelected = true;
+                        } else if (bagResult == -1) {
+                            actionSelected = true;
+                            victory = true;
+                            battleOver = true;
+                        }
+                        break;
+                    default:
+                        interface->clearUI();
+                        interface->addstrUI(&input);
+                        interface->addstrUI(" is not a valid command."
+                                            "\n'F' to fight; 'S' to switch pokemon; 'B' to open your bag");
+                        interface->refreshUI();
+                }
+            }
+        }
+        else {
+            selectedPokemon = switch_pokemon_action(selectedPokemon, true);
+            if (selectedPokemon == NULL) {
+                battleOver = true;
+                victory = false;
+            }
+        }
+        if (!battleOver) {
+            //todo: create more complex trainer AI
+            int trainerMoveIndex;
+            if (trainerSelectedPokemon->knockedOut) {
+                trainerMoveIndex = -1;
+            }
+            else {
+                trainerMoveIndex = rand() % opponent->activePokemon.size();
+            }
+            doCombat(selectedPokemon, moveIndex, trainerSelectedPokemon, trainerMoveIndex);
+            bool noActiveTrainerPokemonRemaining = true;
+            for (int i = 0; i < opponent->activePokemon.size(); i++) {
+                if (!opponent->activePokemon.at(i)->knockedOut) {
+                    noActiveTrainerPokemonRemaining = false;
+                    break;
+                }
+            }
+            if (noActiveTrainerPokemonRemaining) {
+                victory = true;
+                battleOver = true;
+            }
+            else {
+                bool noActivePokemonRemaining = true;
+                for (int i = 0; i < player_character->activePokemon.size(); i++) {
+                    if (!player_character->activePokemon.at(i)->knockedOut) {
+                        noActivePokemonRemaining = false;
+                        break;
+                    }
+                }
+                if (noActivePokemonRemaining) {
+                    victory = false;
+                    battleOver = true;
+                }
+            }
+        }
+    }
+    if (victory) {
+        opponent->defeated = true;
+        opponent->color = COLOR_YELLOW;
         interface->clearUI();
-        interface->addstrUI("Victory! You challenged a trainer to a duel and defeated them soundly! Press escape to leave.\n");
+        interface->addstrUI("Victory! You have defeated a trainer! Press esc to continue.");
         interface->refreshUI();
+        while (interface->getchUI() != 27) {
+            interface->clearUI();
+            interface->addstrUI("Invalid input. You won the battle. Press esc to continue.");
+            interface->refreshUI();
+        }
     }
     else {
-        from_character->defeated = 1;
-        from_character->color = COLOR_YELLOW;
-        //trainer attacks player
         interface->clearUI();
-        interface->addstrUI("Victory! A trainer challenged you to a duel and you trounced them! Press escape to leave.\n");
+        interface->addstrUI("Defeat! You have been defeated by a trainer! Press esc to continue.");
         interface->refreshUI();
+        while (interface->getchUI() != 27) {
+            interface->clearUI();
+            interface->addstrUI("Invalid input. You lost the battle. Press esc to continue.");
+            interface->refreshUI();
+        }
     }
-    int command = -1;
-    while (command != 27) {
-        command = interface->getchUI();
-        interface->clearUI();
-        interface->addstrUI("Invalid command. Press press escape to stop your victory dance after defeating that trainer.\n");
-        interface->refreshUI();
-    }
+
     return 0;
 
 }
@@ -2394,8 +2496,6 @@ Pokemon * create_pokemon() {
 }
 
 int combat_pokemon(Pokemon *wildPokemon) {
-
-    //todo: ASSIGNED: use bag outside of battle
 
     bool victory = false;
     bool battleOver = false;
@@ -2524,33 +2624,33 @@ int getWildPokemonMove(Pokemon *wildPokemon) {
 
 }
 
-int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *wildPokemon, int wildPokemonMoveIndex) {
+int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *enemyPokemon, int enemyPokemonMoveIndex) {
 
     //determine attack order
     bool friendlyPokemonFirst;
     bool bothAttack;
-    if (friendlyPokemonMoveIndex < 0 && wildPokemonMoveIndex < 0) {
+    if (friendlyPokemonMoveIndex < 0 && enemyPokemonMoveIndex < 0) {
         return 0;
     }
     else if (friendlyPokemonMoveIndex < 0) {
         friendlyPokemonFirst = false;
         bothAttack = false;
     }
-    else if (wildPokemonMoveIndex < 0) {
+    else if (enemyPokemonMoveIndex < 0) {
         friendlyPokemonFirst = true;
         bothAttack = false;
     }
     else {
         bothAttack = true;
         int friendlyPokemonPriority = friendlyPokemon->moves.at(friendlyPokemonMoveIndex)->priority;
-        int wildPokemonPriority = wildPokemon->moves.at(wildPokemonMoveIndex)->priority;
+        int wildPokemonPriority = enemyPokemon->moves.at(enemyPokemonMoveIndex)->priority;
         if (friendlyPokemonPriority > wildPokemonPriority) {
             friendlyPokemonFirst = true;
         } else if (wildPokemonPriority > friendlyPokemonPriority) {
             friendlyPokemonFirst = false;
         } else {
             int friendlyPokemonSpeed = friendlyPokemon->getSpeed();
-            int wildPokemonSpeed = wildPokemon->getSpeed();
+            int wildPokemonSpeed = enemyPokemon->getSpeed();
             if (friendlyPokemonSpeed > wildPokemonSpeed) {
                 friendlyPokemonFirst = true;
             } else if (wildPokemonSpeed > friendlyPokemonSpeed) {
@@ -2567,22 +2667,22 @@ int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *wi
 
     //do faster attack
     if (friendlyPokemonFirst) {
-        attack(friendlyPokemon, friendlyPokemonMoveIndex, wildPokemon);
+        attack(friendlyPokemon, friendlyPokemonMoveIndex, enemyPokemon);
     }
     else {
-        attack(wildPokemon, wildPokemonMoveIndex, friendlyPokemon);
+        attack(enemyPokemon, enemyPokemonMoveIndex, friendlyPokemon);
     }
 
     //if either pokemon is at 0 health, the second attacker is at 0 health, so we end the battle
-    if (friendlyPokemon->health == 0 || wildPokemon->health == 0) {
+    if (friendlyPokemon->health == 0 || enemyPokemon->health == 0) {
         return 0;
     }
     //else do the second attack
     if (bothAttack) {
         if (!friendlyPokemonFirst) {
-            attack(friendlyPokemon, friendlyPokemonMoveIndex, wildPokemon);
+            attack(friendlyPokemon, friendlyPokemonMoveIndex, enemyPokemon);
         } else {
-            attack(wildPokemon, wildPokemonMoveIndex, friendlyPokemon);
+            attack(enemyPokemon, enemyPokemonMoveIndex, friendlyPokemon);
         }
     }
 
@@ -2940,7 +3040,7 @@ int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyP
                     return usePokeball(true, enemyPokemon);
                 }
                 else {
-                    message = "You cannot use a pokeball during a trainer battle. Select a bag item by inputting the corresponding number or press esc to go back.";
+                    message = "You cannot use a pokeball outside of a wild pokemon battle. Select a bag item by inputting the corresponding number or press esc to go back.";
                 }
             }
             else if (pokeballUsage == 1) {
