@@ -926,6 +926,8 @@ public:
     void attroffUI(int i) {}
 };
 
+//todo: ASSIGNED: in interface->getchUI check if input is 'Q', if yes go to quit screen, if no continue. Continue would mean 'Q' would be sent to caller though and it would try to parse it too.
+
 //todo: ASSIGNED: set filePath to main file location ("." doesn't work)
 //todo: ASSIGNED: set file path to "" pre submission
 std::string filePath = "/Users/maximpopov/CLionProjects/Pokemon_C_and_CPP/";
@@ -1827,6 +1829,8 @@ int player_turn() {
         } else if (input == '5' || input == ' ' || input == '.') {
             player_character->turn += MINIMUM_TURN;
             turn_completed = 1;
+        } else if (input == 'B') {
+            bag_action(false, player_character->activePokemon.at(0), NULL);
         } else if (input == 't') {
             NonPlayerCharacter *trainers [num_trainers];
             int count = 0;
@@ -2142,6 +2146,7 @@ int player_turn() {
                 interface->addstrUI("Enter 1 or b to move one cell to the lower left.\n");
                 interface->addstrUI("Enter > to enter a pokemart or pokecenter.\n");
                 interface->addstrUI("Enter < to leave a pokemart or pokecenter.\n");
+                interface->addstrUI("Enter B to look into your bag.\n");
                 interface->addstrUI("Enter t to display a list of trainers.\n");
                 interface->addstrUI("Enter up arrow to scroll up on the trainer list.\n");
                 interface->addstrUI("Enter down arrow to scroll up on the trainer list.\n");
@@ -2390,8 +2395,6 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out (or already selected), if has any revives first offer to use them before saying can't use pokemon
-    //todo: ASSIGNED: if select pokemon screen required to select AND cannot select any pokemon (without revive) auto defeat (no revive chance)
     //todo: ASSIGNED: use bag outside of battle
 
     bool victory = false;
@@ -2460,6 +2463,10 @@ int combat_pokemon(Pokemon *wildPokemon) {
         }
         else {
             selectedPokemon = switch_pokemon_action(selectedPokemon, true);
+            if (selectedPokemon == NULL) {
+                battleOver = true;
+                victory = false;
+            }
         }
         if (!battleOver) {
             int wildPokemonMoveIndex = getWildPokemonMove(wildPokemon);
@@ -2749,6 +2756,19 @@ int fight_action(Pokemon *selectedPokemon) {
 
 Pokemon *switch_pokemon_action(Pokemon *selectedPokemon, bool mustSwitch) {
 
+    if (mustSwitch) {
+        bool allKnockedOut = true;
+        for (int i = 0; i < player_character->activePokemon.size(); i++) {
+            if (!player_character->activePokemon.at(i)->knockedOut) {
+                allKnockedOut = false;
+                break;
+            }
+        }
+        if (allKnockedOut) {
+            return NULL;
+        }
+    }
+
     //todo: ASSIGNED: when recalling a pokemon, when knocked out, or when battle ends, lose all status effects and conditions
     //shows pokemon choices
     int line = 0;
@@ -2856,6 +2876,8 @@ Pokemon *switch_pokemon_action(Pokemon *selectedPokemon, bool mustSwitch) {
 }
 
 int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyPokemon) {
+
+    //todo: BUG: should not require a selected pokemon (such as for outside of combat). Select item and then select pokemon to use it on.
 
     //show bag choices
     interface->clearUI();
