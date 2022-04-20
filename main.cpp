@@ -950,7 +950,7 @@ struct heap turn_heap;
 int main(int argc, char *argv[]) {
 
     //todo: ASSIGNED: change to Ncurses on submission
-    interface = new Ncurses();
+    interface = new NoNcurses();
 
     //get arguments
 //    int opt = 0;
@@ -1047,9 +1047,9 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
     interface->initializeTerminalUI();
     heap_init(&turn_heap, comparator_character_movement, NULL);
-    Tile home_tile = create_tile(WORLD_CENTER_X, WORLD_CENTER_Y);
     current_tile_x = WORLD_CENTER_X;
     current_tile_y = WORLD_CENTER_Y;
+    Tile home_tile = create_tile(WORLD_CENTER_X, WORLD_CENTER_Y);
     world[WORLD_CENTER_Y][WORLD_CENTER_X] = &home_tile;
     place_player_character(world[current_tile_y][current_tile_x]);
     while (turn_based_movement() == -1) {
@@ -2348,7 +2348,7 @@ int combat_trainer(Character *opponent) {
                 trainerMoveIndex = -1;
             }
             else {
-                trainerMoveIndex = rand() % opponent->activePokemon.size();
+                trainerMoveIndex = rand() % trainerSelectedPokemon->moves.size();
             }
             doCombat(selectedPokemon, moveIndex, trainerSelectedPokemon, trainerMoveIndex);
             bool noActiveTrainerPokemonRemaining = true;
@@ -4017,6 +4017,7 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
         Character *trainer = new Character(x, y, trainer_type, type_string, character,
                                            COLOR_RED, 0, 0, 0, 0,
                                            0, 0);
+        //todo: BUG: trainer pokemon are created as incredibly powerful (very high health), probably set to high level instead of lvl 1 in starting tile
         trainer->activePokemon.push_back(create_pokemon());
         //60% chance for trainer to get another pokemon if just got a pokemon, up to 6
         for (int i = 0; i < 5; i++) {
