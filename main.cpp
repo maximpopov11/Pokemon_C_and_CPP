@@ -2390,10 +2390,8 @@ Pokemon * create_pokemon() {
 
 int combat_pokemon(Pokemon *wildPokemon) {
 
-    //todo: ASSIGNED: print message for EVERY return (ex. successful potion action doesn't print)
-    //todo: ASSIGNED: if all pokemon knocked out before battle starts immediately lose
-    //todo: ASSIGNED: if all pokemon knocked out in battle, offer revive before ending battle
     //todo: ASSIGNED: if attempting to select pokemon and can't because knocked out (or already selected), if has any revives first offer to use them before saying can't use pokemon
+    //todo: ASSIGNED: if select pokemon screen required to select AND cannot select any pokemon (without revive) auto defeat (no revive chance)
     //todo: ASSIGNED: use bag outside of battle
 
     bool victory = false;
@@ -2870,12 +2868,22 @@ int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyP
     interface->addstrUI(std::to_string(player_character->bag->numPokeballs).c_str());
     interface->refreshUI();
 
+    //todo: ASSIGNED: don't allow potion use on full HP pokemon
     //user's choice
     while (true) {
         const char input = interface->getchUI();
         std::string message;
         if (input == '1') {
             if (player_character->bag->usePotion(selectedPokemon) == 0) {
+                interface->clearUI();
+                interface->addstrUI("You have used a potion on ");
+                interface->addstrUI(selectedPokemon->pokemonInfo->name.c_str());
+                interface->addstrUI("!\n");
+                interface->addstrUI(selectedPokemon->pokemonInfo->name.c_str());
+                interface->addstrUI(" HP: ");
+                interface->addstrUI(std::to_string(selectedPokemon->getHealth()).c_str());
+                interface->refreshUI();
+                battlePause();
                 return 0;
             }
             else {
@@ -2885,6 +2893,15 @@ int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyP
         else if (input == '2') {
             int reviveUsage = player_character->bag->useRevive(selectedPokemon);
             if (reviveUsage == 0) {
+                interface->clearUI();
+                interface->addstrUI("You have used a revive on ");
+                interface->addstrUI(selectedPokemon->pokemonInfo->name.c_str());
+                interface->addstrUI("!\n");
+                interface->addstrUI(selectedPokemon->pokemonInfo->name.c_str());
+                interface->addstrUI(" HP: ");
+                interface->addstrUI(std::to_string(selectedPokemon->getHealth()).c_str());
+                interface->refreshUI();
+                battlePause();
                 return 0;
             }
             else if (reviveUsage == 1) {
