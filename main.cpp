@@ -950,7 +950,7 @@ struct heap turn_heap;
 int main(int argc, char *argv[]) {
 
     //todo: ASSIGNED: change to Ncurses on submission
-    interface = new NoNcurses();
+    interface = new Ncurses();
 
     //get arguments
 //    int opt = 0;
@@ -3004,6 +3004,8 @@ int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyP
                 interface->addstrUI(selectedPokemon->pokemonInfo->name.c_str());
                 interface->addstrUI(" HP: ");
                 interface->addstrUI(std::to_string(selectedPokemon->getHealth()).c_str());
+                interface->addstrUI("/");
+                interface->addstrUI(std::to_string(selectedPokemon->maxHealth).c_str());
                 interface->refreshUI();
                 battlePause();
                 return 0;
@@ -3022,6 +3024,8 @@ int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyP
                 interface->addstrUI(selectedPokemon->pokemonInfo->name.c_str());
                 interface->addstrUI(" HP: ");
                 interface->addstrUI(std::to_string(selectedPokemon->getHealth()).c_str());
+                interface->addstrUI("/");
+                interface->addstrUI(std::to_string(selectedPokemon->maxHealth).c_str());
                 interface->refreshUI();
                 battlePause();
                 return 0;
