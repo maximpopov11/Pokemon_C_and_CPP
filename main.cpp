@@ -846,7 +846,7 @@ public:
     virtual void mvaddchUI(int y, int x, char ch) = 0;
     virtual void mvaddstrUI(int y, int x, const char * string) = 0;
     virtual void init_pairUI(int i, short color1, short color2) = 0;
-    virtual void attrsetUI(int i) = 0;
+    virtual void attronUI(int i) = 0;
     virtual void attroffUI(int i) = 0;
 };
 
@@ -854,6 +854,7 @@ class Ncurses : public UserInterface {
 public:
     void initializeTerminalUI() {
         initscr();
+        start_color();
         raw();
         noecho();
         curs_set(0);
@@ -886,8 +887,8 @@ public:
     void init_pairUI(int i, short color1, short color2) {
         init_pair(i, color1, color2);
     }
-    void attrsetUI(int i) {
-        attrset(i);
+    void attronUI(int i) {
+        attron(i);
     }
     void attroffUI(int i) {
         attroff(i);
@@ -922,7 +923,7 @@ public:
         std::cout << "\n" << string;
     }
     void init_pairUI(int i, short color1, short color2) {}
-    void attrsetUI(int i) {}
+    void attronUI(int i) {}
     void attroffUI(int i) {}
 };
 
@@ -4170,14 +4171,14 @@ int print_tile_terrain(Tile *tile) {
                 //todo: RUN BUG: color isn't showing. Currently testing preset color rather than obtained from data.
                 interface->init_pairUI(1, COLOR_RED, COLOR_BLACK);
                 //interface->init_pairUI(1, Tile->Tile[y][x].Character->color, COLOR_BLACK);
-                interface->attrsetUI(COLOR_PAIR(1));
+                interface->attronUI(COLOR_PAIR(1));
                 interface->mvaddchUI(y + 1, x, printable_character);
                 interface->refreshUI();
                 interface->attroffUI(COLOR_PAIR(1));
             }
             else {
                 interface->init_pairUI(1, tile->tile[y][x].terrain.color, COLOR_BLACK);
-                interface->attrsetUI(COLOR_PAIR(1));
+                interface->attronUI(COLOR_PAIR(1));
                 interface->mvaddchUI(y + 1, x, printable_character);
                 interface->refreshUI();
                 interface->attroffUI(COLOR_PAIR(1));
