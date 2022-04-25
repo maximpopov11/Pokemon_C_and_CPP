@@ -2405,7 +2405,7 @@ int combat_trainer(Character *opponent) {
     }
     if (victory) {
         opponent->defeated = true;
-        opponent->color = YELLOW;
+        opponent->color = MAGENTA;
         interface->clearUI();
         interface->addstrUI("Victory! You have defeated a trainer! Press esc to continue.");
         interface->refreshUI();
@@ -4184,7 +4184,6 @@ double distance(int x1, int y1, int x2, int y2) {
 
 int print_tile_terrain(Tile *tile) {
 
-    //todo: ASSIGNED: set defeated trainer color to orange as yellow blends with the path too much
     interface->clearUI();
     for (int y = 0; y < TILE_LENGTH_Y; y++) {
         for (int x = 0; x < TILE_WIDTH_X; x++) {
