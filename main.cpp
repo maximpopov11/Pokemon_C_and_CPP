@@ -2278,8 +2278,6 @@ int move_character(int x, int y, int new_x, int new_y) {
 
 int combat_trainer(Character *opponent) {
 
-    //todo: ASSIGNED: same as combat pokemon, but trainer gets choices too
-
     bool victory = false;
     bool battleOver = false;
     int numRunAttempts = 0;
@@ -2346,6 +2344,12 @@ int combat_trainer(Character *opponent) {
             int trainerMoveIndex;
             if (trainerSelectedPokemon->knockedOut) {
                 trainerMoveIndex = -1;
+                for (int i = 0; i < opponent->activePokemon.size(); i++) {
+                    if (!opponent->activePokemon.at(i)->knockedOut) {
+                        trainerSelectedPokemon = opponent->activePokemon.at(i);
+                        break;
+                    }
+                }
             }
             else {
                 trainerMoveIndex = rand() % trainerSelectedPokemon->moves.size();
@@ -2771,8 +2775,6 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon) 
     }
     interface->refreshUI();
     battlePause();
-
-    //todo: BUG: attacker does way too much damage (up to over 500 for a lvl 1 pokemon with 11 - 13 hp)
 
     return 0;
 
