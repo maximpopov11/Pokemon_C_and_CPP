@@ -4163,13 +4163,22 @@ double distance(int x1, int y1, int x2, int y2) {
 
 int print_tile_terrain(Tile *tile) {
 
+    interface->clearUI();
+
+
+    interface->init_pairUI(1, COLOR_RED, COLOR_BLACK);
+    interface->attronUI(COLOR_PAIR(1));
+    interface->addstrUI("colored\n");
+    interface->attroffUI(COLOR_PAIR(1));
+    interface->refreshUI();
+
+    //todo: BUG: color might not work because we init pair over already existing color pair spot (value 1) every time? Fix by creating color pairs at the start and assigning them rather than colors individually to terrain/characters.
     for (int y = 0; y < TILE_LENGTH_Y; y++) {
         for (int x = 0; x < TILE_WIDTH_X; x++) {
             char printable_character = tile->tile[y][x].terrain.printable_character;
             if (tile->tile[y][x].character != NULL) {
                 printable_character = tile->tile[y][x].character->printable_character;
                 //todo: RUN BUG: color isn't showing. Currently testing preset color rather than obtained from data.
-                interface->init_pairUI(1, COLOR_RED, COLOR_BLACK);
                 //interface->init_pairUI(1, Tile->Tile[y][x].Character->color, COLOR_BLACK);
                 interface->attronUI(COLOR_PAIR(1));
                 interface->mvaddchUI(y + 1, x, printable_character);
@@ -4177,7 +4186,6 @@ int print_tile_terrain(Tile *tile) {
                 interface->attroffUI(COLOR_PAIR(1));
             }
             else {
-                interface->init_pairUI(1, tile->tile[y][x].terrain.color, COLOR_BLACK);
                 interface->attronUI(COLOR_PAIR(1));
                 interface->mvaddchUI(y + 1, x, printable_character);
                 interface->refreshUI();
