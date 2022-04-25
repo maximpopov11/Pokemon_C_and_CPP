@@ -23,6 +23,14 @@
 //77 = minimum number of paths in Tile - 1 for PC so all trainers can be placed
 #define MAX_NUM_TRAINERS 77
 #define INVERSE_POKEMON_ENCOUNTER_CHANCE 10
+#define BLACK COLOR_PAIR(1)
+#define RED COLOR_PAIR(2)
+#define GREEN COLOR_PAIR(3)
+#define YELLOW COLOR_PAIR(4)
+#define BLUE COLOR_PAIR(5)
+#define MAGENTA COLOR_PAIR(6)
+#define CYAN COLOR_PAIR(7)
+#define WHITE COLOR_PAIR(8)
 
 //Author Maxim Popov
 enum character_type {
@@ -50,25 +58,25 @@ public:
     int pc_weight;
     int rival_weight;
     int hiker_weight;
-    short color;
+    int color;
 
-    Terrain() : Terrain(0, '_', 0, 0, 0, 0, COLOR_BLACK) {}
+    Terrain() : Terrain(0, '_', 0, 0, 0, 0, BLACK) {}
 
-    Terrain(int id, char printable_character, int path_weight, int pc_weight, int rival_weight, int hiker_weight, short color) :
+    Terrain(int id, char printable_character, int path_weight, int pc_weight, int rival_weight, int hiker_weight, int color) :
         id(id), printable_character(printable_character), path_weight(path_weight), pc_weight(pc_weight),
         rival_weight(rival_weight), hiker_weight(hiker_weight), color(color) {}
 };
 
-static Terrain *none = new Terrain(0, '_', 0, 0, 0, 0, COLOR_BLACK);
-static Terrain *edge = new Terrain(1, '%', INT_MAX, INT_MAX, INT_MAX, INT_MAX, COLOR_WHITE);
-static Terrain *clearing = new Terrain(2, '.', 5, 10, 10, 5, COLOR_YELLOW);
-static Terrain *grass = new Terrain(3, ',', 10, 15, 15, 5, COLOR_GREEN);
-static Terrain *forest = new Terrain(4, '^', 100, INT_MAX, INT_MAX, 10, COLOR_GREEN);
-static Terrain *mountain = new Terrain(5, '%', 150, INT_MAX, INT_MAX, 10, COLOR_WHITE);
-static Terrain *lake = new Terrain(6, '~', 200, INT_MAX, INT_MAX, INT_MAX, COLOR_BLUE);
-static Terrain *path = new Terrain(7, '#', 0, 5, 5, 5, COLOR_YELLOW);
-static Terrain *center = new Terrain(8, 'C', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA);
-static Terrain *mart = new Terrain(9, 'M', INT_MAX, 5, INT_MAX, INT_MAX, COLOR_MAGENTA);
+static Terrain *none = new Terrain(0, '_', 0, 0, 0, 0, BLACK);
+static Terrain *edge = new Terrain(1, '%', INT_MAX, INT_MAX, INT_MAX, INT_MAX, WHITE);
+static Terrain *clearing = new Terrain(2, '.', 5, 10, 10, 5, YELLOW);
+static Terrain *grass = new Terrain(3, ',', 10, 15, 15, 5, GREEN);
+static Terrain *forest = new Terrain(4, '^', 100, INT_MAX, INT_MAX, 10, GREEN);
+static Terrain *mountain = new Terrain(5, '%', 150, INT_MAX, INT_MAX, 10, WHITE);
+static Terrain *lake = new Terrain(6, '~', 200, INT_MAX, INT_MAX, INT_MAX, BLUE);
+static Terrain *path = new Terrain(7, '#', 0, 5, 5, 5, YELLOW);
+static Terrain *center = new Terrain(8, 'C', INT_MAX, 5, INT_MAX, INT_MAX, MAGENTA);
+static Terrain *mart = new Terrain(9, 'M', INT_MAX, 5, INT_MAX, INT_MAX, MAGENTA);
 
 //commented due to failing make
 //class DatabaseInfo {
@@ -701,7 +709,7 @@ public:
     enum character_type type_enum;
     std::string type_string;
     char printable_character;
-    short color;
+    int color;
     int turn;
     int direction_set;
     int x_direction;
@@ -712,7 +720,7 @@ public:
     std::vector<Pokemon *> activePokemon;
     Bag *bag;
 
-    Character(int x, int y, enum  character_type type_enum, std::string type_string, char printable_character, short color,
+    Character(int x, int y, enum  character_type type_enum, std::string type_string, char printable_character, int color,
               int turn, int direction_set, int x_direction, int y_direction, int in_building, int defeated) : x(x), y(y),
               type_enum(type_enum), type_string(type_string), printable_character(printable_character), color(color),
               turn(turn), direction_set(direction_set), x_direction(x_direction), y_direction(y_direction),
@@ -855,6 +863,7 @@ public:
     void initializeTerminalUI() {
         initscr();
         start_color();
+        create_colors();
         raw();
         noecho();
         curs_set(0);
@@ -892,6 +901,18 @@ public:
     }
     void attroffUI(int i) {
         attroff(i);
+    }
+
+private:
+    void create_colors() {
+        init_pairUI(1, COLOR_BLACK, COLOR_BLACK);
+        init_pairUI(2, COLOR_RED, COLOR_BLACK);
+        init_pairUI(3, COLOR_GREEN, COLOR_BLACK);
+        init_pairUI(4, COLOR_YELLOW, COLOR_BLACK);
+        init_pairUI(5, COLOR_BLUE, COLOR_BLACK);
+        init_pairUI(6, COLOR_MAGENTA, COLOR_BLACK);
+        init_pairUI(7, COLOR_CYAN, COLOR_BLACK);
+        init_pairUI(8, COLOR_WHITE, COLOR_BLACK);
     }
 };
 
@@ -2384,7 +2405,7 @@ int combat_trainer(Character *opponent) {
     }
     if (victory) {
         opponent->defeated = true;
-        opponent->color = COLOR_YELLOW;
+        opponent->color = YELLOW;
         interface->clearUI();
         interface->addstrUI("Victory! You have defeated a trainer! Press esc to continue.");
         interface->refreshUI();
@@ -3744,7 +3765,7 @@ int place_player_character(Tile *tile) {
         }
     }
 
-    player_character = new Character(x, y, PLAYER, "PLAYER", '@', COLOR_CYAN,
+    player_character = new Character(x, y, PLAYER, "PLAYER", '@', CYAN,
                                      0, 0, 0, 0, 0, 0);
     select_pokemon(player_character);
     tile->player_character = (PlayerCharacter *) player_character;
@@ -4022,7 +4043,7 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
             return 1;
         }
         Character *trainer = new Character(x, y, trainer_type, type_string, character,
-                                           COLOR_RED, 0, 0, 0, 0,
+                                           RED, 0, 0, 0, 0,
                                            0, 0);
         //todo: BUG: trainer pokemon are created as incredibly powerful (very high health), probably set to high level instead of lvl 1 in starting tile
         trainer->activePokemon.push_back(create_pokemon());
@@ -4163,33 +4184,23 @@ double distance(int x1, int y1, int x2, int y2) {
 
 int print_tile_terrain(Tile *tile) {
 
+    //todo: ASSIGNED: set defeated trainer color to orange as yellow blends with the path too much
     interface->clearUI();
-
-
-    interface->init_pairUI(1, COLOR_RED, COLOR_BLACK);
-    interface->attronUI(COLOR_PAIR(1));
-    interface->addstrUI("colored\n");
-    interface->attroffUI(COLOR_PAIR(1));
-    interface->refreshUI();
-
-    //todo: BUG: color might not work because we init pair over already existing color pair spot (value 1) every time? Fix by creating color pairs at the start and assigning them rather than colors individually to terrain/characters.
     for (int y = 0; y < TILE_LENGTH_Y; y++) {
         for (int x = 0; x < TILE_WIDTH_X; x++) {
             char printable_character = tile->tile[y][x].terrain.printable_character;
             if (tile->tile[y][x].character != NULL) {
                 printable_character = tile->tile[y][x].character->printable_character;
-                //todo: RUN BUG: color isn't showing. Currently testing preset color rather than obtained from data.
-                //interface->init_pairUI(1, Tile->Tile[y][x].Character->color, COLOR_BLACK);
-                interface->attronUI(COLOR_PAIR(1));
+                interface->attronUI(tile->tile[y][x].character->color);
                 interface->mvaddchUI(y + 1, x, printable_character);
                 interface->refreshUI();
-                interface->attroffUI(COLOR_PAIR(1));
+                interface->attroffUI(tile->tile[y][x].character->color);
             }
             else {
-                interface->attronUI(COLOR_PAIR(1));
+                interface->attronUI(tile->tile[y][x].terrain.color);
                 interface->mvaddchUI(y + 1, x, printable_character);
                 interface->refreshUI();
-                interface->attroffUI(COLOR_PAIR(1));
+                interface->attroffUI(tile->tile[y][x].terrain.color);
             }
         }
     }
