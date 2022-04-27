@@ -31,6 +31,19 @@
 #define MAGENTA COLOR_PAIR(6)
 #define CYAN COLOR_PAIR(7)
 #define WHITE COLOR_PAIR(8)
+#define MAXIMUM_LEVEL 100
+//index = level, value = experience required for that level
+int levelUpExperienceCost[] = {0, 0, 6, 21, 51, 100, 172, 274, 409, 583,
+   800,1064, 1382, 1757, 2195, 2700, 3276, 3930, 4665, 5487,
+   6400, 7408, 8518, 9733, 11059, 12500, 14060, 15746, 17561, 19511,
+   21600, 23832, 26214, 28749, 31443, 34300, 37324, 40522, 43897,
+   47455, 51200, 55136, 59270, 63605, 68147, 72900, 77868, 83058,
+   88473, 94119, 100000, 106120, 112486, 119101, 125971, 133100, 140492,
+   148154, 156089, 164303, 172800, 181584, 190662, 200037, 209715,219700,
+   229996, 240610, 251545, 262807, 274400, 286328, 298598, 311213, 324179,
+   337500, 351180, 365226, 379641, 394431, 409600, 425152, 441094, 457429,
+   474163, 491300, 508844, 526802, 545177, 563975, 583200, 602856, 622950,
+   643485, 664467, 685900, 707788, 730138, 752953, 776239, 800000};
 
 //Author Maxim Popov
 enum character_type {
@@ -575,6 +588,7 @@ public:
     int special_defense_iv = rand() % 16;
     int speed_iv = rand() % 16;
     int level;
+    int experience;
     int maxHealth;
     int health;
     //must have between 1 and 4 moves (2 on creation if possible, 1 is always possible if not 2)
@@ -590,6 +604,7 @@ public:
             pokemonInfo(pokemonInfo), base_health(base_health), base_attack(base_attack), base_defense(base_defense),
             base_speed(base_speed), base_special_attack(base_special_attack), base_special_defense(base_special_defense),
             level(level), moves(moves), male(male), shiny(shiny) {
+        this->experience = 0;
         this->maxHealth = ((base_health + health_iv) * 2 * level) / 100 + level + 10;
         this->health = maxHealth;
     }
@@ -616,6 +631,16 @@ public:
 
     int getSpeed() {
         return ((base_speed + speed_iv) * 2 * level) / 100 + 5;
+    }
+
+    bool gainExperience(int amount) {
+        this->experience += amount;
+        bool levelUp = false;
+        while (level + 1 <= MAXIMUM_LEVEL && experience > levelUpExperienceCost[level + 1]) {
+            level++;
+            levelUp = true;
+        }
+        return levelUp;
     }
 
     int takeDamage(int amount) {
@@ -810,14 +835,16 @@ int combat_trainer(Character *opponent);
 Pokemon * create_pokemon();
 int combat_pokemon(Pokemon *wildPokemon);
 int getWildPokemonMove(Pokemon *wildPokemon);
-int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *enemyPokemon, int enemyPokemonMoveIndex);
-int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon);
+int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *enemyPokemon, int enemyPokemonMoveIndex,
+             bool trainerBattle);
+int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon, bool trainerBattle);
 int battlePause();
 int fight_action(Pokemon *selectedPokemon);
 Pokemon *switch_pokemon_action(Pokemon *selectedPokemon, bool mustSwitch);
 int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyPokemon);
 int usePokeball(bool success, Pokemon *targetPokemon);
 int run_action(Pokemon *characterPokemon, Pokemon *wildPokemon, int numAttempts);
+int levelUp(Pokemon *pokemon);
 int enter_center();
 int enter_mart();
 int change_tile(int x, int y);
@@ -2376,7 +2403,7 @@ int combat_trainer(Character *opponent) {
             else {
                 trainerMoveIndex = rand() % trainerSelectedPokemon->moves.size();
             }
-            doCombat(selectedPokemon, moveIndex, trainerSelectedPokemon, trainerMoveIndex);
+            doCombat(selectedPokemon, moveIndex, trainerSelectedPokemon, trainerMoveIndex, true);
             bool noActiveTrainerPokemonRemaining = true;
             for (int i = 0; i < opponent->activePokemon.size(); i++) {
                 if (!opponent->activePokemon.at(i)->knockedOut) {
@@ -2596,7 +2623,7 @@ int combat_pokemon(Pokemon *wildPokemon) {
         }
         if (!battleOver) {
             int wildPokemonMoveIndex = getWildPokemonMove(wildPokemon);
-            doCombat(selectedPokemon, moveIndex, wildPokemon, wildPokemonMoveIndex);
+            doCombat(selectedPokemon, moveIndex, wildPokemon, wildPokemonMoveIndex, false);
             if (wildPokemon->knockedOut) {
                 victory = true;
                 battleOver = true;
@@ -2650,7 +2677,8 @@ int getWildPokemonMove(Pokemon *wildPokemon) {
 
 }
 
-int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *enemyPokemon, int enemyPokemonMoveIndex) {
+int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *enemyPokemon, int enemyPokemonMoveIndex,
+             bool trainerBattle) {
 
     //determine attack order
     bool friendlyPokemonFirst;
@@ -2693,10 +2721,10 @@ int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *en
 
     //do faster attack
     if (friendlyPokemonFirst) {
-        attack(friendlyPokemon, friendlyPokemonMoveIndex, enemyPokemon);
+        attack(friendlyPokemon, friendlyPokemonMoveIndex, enemyPokemon, trainerBattle);
     }
     else {
-        attack(enemyPokemon, enemyPokemonMoveIndex, friendlyPokemon);
+        attack(enemyPokemon, enemyPokemonMoveIndex, friendlyPokemon, trainerBattle);
     }
 
     //if either pokemon is at 0 health, the second attacker is at 0 health, so we end the battle
@@ -2706,9 +2734,9 @@ int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *en
     //else do the second attack
     if (bothAttack) {
         if (!friendlyPokemonFirst) {
-            attack(friendlyPokemon, friendlyPokemonMoveIndex, enemyPokemon);
+            attack(friendlyPokemon, friendlyPokemonMoveIndex, enemyPokemon, trainerBattle);
         } else {
-            attack(enemyPokemon, enemyPokemonMoveIndex, friendlyPokemon);
+            attack(enemyPokemon, enemyPokemonMoveIndex, friendlyPokemon, trainerBattle);
         }
     }
 
@@ -2716,7 +2744,7 @@ int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *en
 
 }
 
-int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon) {
+int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon, bool trainerBattle) {
 
     Move *move = attackingPokemon->moves.at(moveIndex);
 
@@ -2794,6 +2822,24 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon) 
     if (defendingPokemon->knockedOut) {
         interface->mvaddstrUI(line, 0, defendingPokemon->pokemonInfo->name.c_str());
         interface->addstrUI(" has fainted!");
+        line++;
+        double battleTypeModifier = 1.0;
+        if (trainerBattle) {
+            battleTypeModifier = 1.5;
+        }
+        int baseExperience = defendingPokemon->pokemonInfo->base_experience;
+        int level = defendingPokemon->level;
+        int experience = (int) (battleTypeModifier * baseExperience * level / 7);
+        interface->mvaddstrUI(line, 0, attackingPokemon->pokemonInfo->name.c_str());
+        interface->addstrUI(" has gained ");
+        interface->addstrUI(std::to_string(experience).c_str());
+        interface->addstrUI(" experience!");
+        interface->refreshUI();
+        battlePause();
+        if (attackingPokemon->gainExperience(experience)) {
+            levelUp(attackingPokemon);
+        }
+        //todo: show level upon level up
     }
     interface->refreshUI();
     battlePause();
@@ -3161,6 +3207,23 @@ int run_action(Pokemon *characterPokemon, Pokemon *wildPokemon, int numAttempts)
         battlePause();
         return 1;
     }
+
+}
+
+int levelUp(Pokemon *pokemon) {
+
+    interface->clearUI();
+    interface->addstrUI(pokemon->pokemonInfo->name.c_str());
+    interface->addstrUI(" has leveled up!");
+    interface->addstrUI("\n");
+    interface->addstrUI("Experience: ");
+    interface->addstrUI(std::to_string(pokemon->experience).c_str());
+    interface->addstrUI("/");
+    interface->addstrUI(std::to_string(levelUpExperienceCost[pokemon->level + 1]).c_str());
+    interface->refreshUI();
+    battlePause();
+
+    return 0;
 
 }
 
