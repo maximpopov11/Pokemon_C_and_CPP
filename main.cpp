@@ -2925,6 +2925,8 @@ int fight_action(Pokemon *selectedPokemon) {
 
 Pokemon *switch_pokemon_action(Pokemon *selectedPokemon, bool mustSwitch) {
 
+    //todo: ASSIGNED: Experience: show experience and level in all 3 duplicated sets of showing pokemon
+
     if (mustSwitch) {
         bool allKnockedOut = true;
         for (int i = 0; i < player_character->activePokemon.size(); i++) {
@@ -2954,6 +2956,8 @@ Pokemon *switch_pokemon_action(Pokemon *selectedPokemon, bool mustSwitch) {
         interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
         interface->addstrUI(". ");
         interface->addstrUI(player_character->activePokemon.at(i)->pokemonInfo->name.c_str());
+        interface->addstrUI(" Level ");
+        interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->level).c_str());
         interface->addstrUI(" ");
         interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->getHealth()).c_str());
         interface->addstrUI("/");
@@ -2985,6 +2989,8 @@ Pokemon *switch_pokemon_action(Pokemon *selectedPokemon, bool mustSwitch) {
                     interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
                     interface->addstrUI(". ");
                     interface->addstrUI(player_character->activePokemon.at(i)->pokemonInfo->name.c_str());
+                    interface->addstrUI(" Level ");
+                    interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->level).c_str());
                     interface->addstrUI(" ");
                     interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->getHealth()).c_str());
                     interface->addstrUI(" HP");
@@ -3010,6 +3016,8 @@ Pokemon *switch_pokemon_action(Pokemon *selectedPokemon, bool mustSwitch) {
                     interface->mvaddstrUI(line, 0, std::to_string(line).c_str());
                     interface->addstrUI(". ");
                     interface->addstrUI(player_character->activePokemon.at(i)->pokemonInfo->name.c_str());
+                    interface->addstrUI(" Level ");
+                    interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->level).c_str());
                     interface->addstrUI(" ");
                     interface->addstrUI(std::to_string(player_character->activePokemon.at(i)->getHealth()).c_str());
                     interface->addstrUI(" HP");
