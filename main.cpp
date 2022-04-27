@@ -2839,7 +2839,6 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon, 
         if (attackingPokemon->gainExperience(experience)) {
             levelUp(attackingPokemon);
         }
-        //todo: show level upon level up
     }
     interface->refreshUI();
     battlePause();
@@ -3214,7 +3213,9 @@ int levelUp(Pokemon *pokemon) {
 
     interface->clearUI();
     interface->addstrUI(pokemon->pokemonInfo->name.c_str());
-    interface->addstrUI(" has leveled up!");
+    interface->addstrUI(" has leveled up to level");
+    interface->addstrUI(std::to_string(pokemon->level).c_str());
+    interface->addstrUI("!");
     interface->addstrUI("\n");
     interface->addstrUI("Experience: ");
     interface->addstrUI(std::to_string(pokemon->experience).c_str());
