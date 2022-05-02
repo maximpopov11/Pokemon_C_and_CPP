@@ -4076,18 +4076,23 @@ int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_
             x = rand() % 78 + 1;
             y = rand() % 19 + 1;
             if (tile->tile[y][x].character == NULL) {
-                if (trainer_type == HIKER) {
-                    //spawns anywhere hiker can reach PC from
-                    if (hiker_distance_tile[y][x] < INT_MAX) {
-                        found = 1;
-                    }
+                //todo: BUG: once fixed Dijkstra distance to PC tile creation, uncomment commented code and delete place by PC can move over
+                //spawns anywhere PC can step on (not necessarily reach if surrounded by uncrossable)
+                if (tile->tile[y][x].terrain.rival_weight < INT_MAX) {
+                    found = 1;
                 }
-                else {
-                    //spawns anywhere rival can reach PC from
-                    if (rival_distance_tile[y][x] < INT_MAX) {
-                        found = 1;
-                    }
-                }
+//                if (trainer_type == HIKER) {
+//                    //spawns anywhere hiker can reach PC from
+//                    if (hiker_distance_tile[y][x] < INT_MAX) {
+//                        found = 1;
+//                    }
+//                }
+//                else {
+//                    //spawns anywhere rival can reach PC from
+//                    if (rival_distance_tile[y][x] < INT_MAX) {
+//                        found = 1;
+//                    }
+//                }
             }
         }
         std::string type_string;
