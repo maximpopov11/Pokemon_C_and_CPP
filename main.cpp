@@ -862,6 +862,7 @@ int generate_buildings(Tile *tile, int x, int y);
 int place_building(Tile *tile, Terrain terrain, double chance);
 int place_player_character(Tile *tile);
 int select_pokemon(Character *playerCharacter);
+int select_pokemon_cheating(Character *playerCharacter);
 int place_trainers(Tile *tile);
 int place_trainer_type(Tile *tile, int num_trainer, enum character_type trainer_type, char character);
 int dijkstra(Tile *tile, enum character_type trainer_type);
@@ -996,6 +997,7 @@ int current_tile_x;
 int current_tile_y;
 Character *player_character;
 int num_trainers;
+bool cheating;
 struct heap turn_heap;
 
 int main(int argc, char *argv[]) {
@@ -1598,21 +1600,20 @@ int cheat_toggle_question() {
     interface->refreshUI();
 
     //Response
-    bool cheat;
     while (true) {
         char input = interface->getchUI();
         if (input == 'y') {
-            cheat = true;
+            cheating = true;
             break;
         }
         else if (input == 'n') {
-            cheat = false;
+            cheating = false;
             break;
         }
     }
 
     //Message post response
-    if (cheat) {
+    if (cheating) {
         interface->clearUI();
         interface->mvaddstrUI(0, 0,"Why do you cheat in a game like this? Like seriously, what is the point? Do you");
         interface->mvaddstrUI(1, 0, "get some feeling of pleasure by proving to yourself that you can beat this");
@@ -3938,162 +3939,191 @@ int place_player_character(Tile *tile) {
 
 int select_pokemon(Character *playerCharacter) {
 
-    //create pokemon choices
-    Pokemon *pokemon1 = create_pokemon();
-    Pokemon *pokemon2 = create_pokemon();
-    Pokemon *pokemon3 = create_pokemon();
-
-    //present pokemon choices to player
-    interface->clearUI();
-
-    int lineNumber = 0;
-
-    interface->addstrUI("Input 1/2/3 to choose the respective starting pokemon!");
-    lineNumber++;
-
-    interface->mvaddstrUI(lineNumber, 0, "Option: ");
-    interface->mvaddstrUI(lineNumber, 20, "1. ");
-    interface->addstrUI(pokemon1->pokemonInfo->name.c_str());
-    interface->mvaddstrUI(lineNumber, 40, "2. ");
-    interface->addstrUI(pokemon2->pokemonInfo->name.c_str());
-    interface->mvaddstrUI(lineNumber, 60, "3. ");
-    interface->addstrUI(pokemon3->pokemonInfo->name.c_str());
-    lineNumber++;
-
-    interface->mvaddstrUI(lineNumber, 0, "Level: ");
-    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->level).c_str());
-    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->level).c_str());
-    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->level).c_str());
-    lineNumber++;
-
-    interface->mvaddstrUI(lineNumber, 0, "Move 1: ");
-    interface->mvaddstrUI(lineNumber, 20, pokemon1->moves.at(0)->name.c_str());
-    interface->mvaddstrUI(lineNumber, 40, pokemon2->moves.at(0)->name.c_str());
-    interface->mvaddstrUI(lineNumber, 60, pokemon3->moves.at(0)->name.c_str());
-    lineNumber++;
-
-    interface->mvaddstrUI(lineNumber, 0, "Move 2: ");
-    if (pokemon1->moves.size() > 1) {
-        interface->mvaddstrUI(lineNumber, 20, pokemon1->moves.at(1)->name.c_str());
+    if (cheating) {
+        select_pokemon_cheating(playerCharacter);
     }
     else {
-        interface->mvaddstrUI(lineNumber, 20, "none");
-    }
-    if (pokemon1->moves.size() > 1) {
-        interface->mvaddstrUI(lineNumber, 40, pokemon2->moves.at(1)->name.c_str());
-    }
-    else {
-        interface->mvaddstrUI(lineNumber, 40, "none");
-    }
-    if (pokemon1->moves.size() > 1) {
-        interface->mvaddstrUI(lineNumber, 60, pokemon3->moves.at(1)->name.c_str());
-    }
-    else {
-        interface->mvaddstrUI(lineNumber, 60, "none");
-    }
-    lineNumber++;
 
-    interface->mvaddstrUI(lineNumber, 0, "HP: ");
-    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getHealth()).c_str());
-    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getHealth()).c_str());
-    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getHealth()).c_str());
-    lineNumber++;
+        //create pokemon choices
+        Pokemon *pokemon1 = create_pokemon();
+        Pokemon *pokemon2 = create_pokemon();
+        Pokemon *pokemon3 = create_pokemon();
 
-    interface->mvaddstrUI(lineNumber, 0, "Attack: ");
-    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getAttack()).c_str());
-    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getAttack()).c_str());
-    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getAttack()).c_str());
-    lineNumber++;
+        //present pokemon choices to player
+        interface->clearUI();
 
-    interface->mvaddstrUI(lineNumber, 0, "Defense: ");
-    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getDefense()).c_str());
-    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getDefense()).c_str());
-    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getDefense()).c_str());
-    lineNumber++;
+        int lineNumber = 0;
 
-    interface->mvaddstrUI(lineNumber, 0, "Special Attack: ");
-    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getSpecialAttack()).c_str());
-    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getSpecialAttack()).c_str());
-    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getSpecialAttack()).c_str());
-    lineNumber++;
+        interface->addstrUI("Input 1/2/3 to choose the respective starting pokemon!");
+        lineNumber++;
 
-    interface->mvaddstrUI(lineNumber, 0, "Special Defense: ");
-    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getSpecialDefense()).c_str());
-    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getSpecialDefense()).c_str());
-    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getSpecialDefense()).c_str());
-    lineNumber++;
+        interface->mvaddstrUI(lineNumber, 0, "Option: ");
+        interface->mvaddstrUI(lineNumber, 20, "1. ");
+        interface->addstrUI(pokemon1->pokemonInfo->name.c_str());
+        interface->mvaddstrUI(lineNumber, 40, "2. ");
+        interface->addstrUI(pokemon2->pokemonInfo->name.c_str());
+        interface->mvaddstrUI(lineNumber, 60, "3. ");
+        interface->addstrUI(pokemon3->pokemonInfo->name.c_str());
+        lineNumber++;
 
-    interface->mvaddstrUI(lineNumber, 0, "Speed: ");
-    interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getSpeed()).c_str());
-    interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getSpeed()).c_str());
-    interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getSpeed()).c_str());
-    lineNumber++;
+        interface->mvaddstrUI(lineNumber, 0, "Level: ");
+        interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->level).c_str());
+        interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->level).c_str());
+        interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->level).c_str());
+        lineNumber++;
 
-    interface->mvaddstrUI(lineNumber, 0, "Gender: ");
-    if (pokemon1->male == true) {
-        interface->mvaddstrUI(lineNumber, 20, "Male");
-    }
-    else {
-        interface->mvaddstrUI(lineNumber, 20, "Female");
-    }
-    if (pokemon2->male == true) {
-        interface->mvaddstrUI(lineNumber, 40, "Male");
-    }
-    else {
-        interface->mvaddstrUI(lineNumber, 40, "Female");
-    }
-    if (pokemon3->male == true) {
-        interface->mvaddstrUI(lineNumber, 60, "Male");
-    }
-    else {
-        interface->mvaddstrUI(lineNumber, 60, "Female");
-    }
-    lineNumber++;
+        interface->mvaddstrUI(lineNumber, 0, "Move 1: ");
+        interface->mvaddstrUI(lineNumber, 20, pokemon1->moves.at(0)->name.c_str());
+        interface->mvaddstrUI(lineNumber, 40, pokemon2->moves.at(0)->name.c_str());
+        interface->mvaddstrUI(lineNumber, 60, pokemon3->moves.at(0)->name.c_str());
+        lineNumber++;
 
-    interface->mvaddstrUI(lineNumber, 0, "Shiny: ");
-    if (pokemon1->shiny == true) {
-        interface->mvaddstrUI(lineNumber, 20, "Yes");
-    }
-    else {
-        interface->mvaddstrUI(lineNumber, 20, "No");
-    }
-    if (pokemon2->shiny == true) {
-        interface->mvaddstrUI(lineNumber, 40, "Yes");
-    }
-    else {
-        interface->mvaddstrUI(lineNumber, 40, "No");
-    }
-    if (pokemon3->shiny == true) {
-        interface->mvaddstrUI(lineNumber, 60, "Yes");
-    }
-    else {
-        interface->mvaddstrUI(lineNumber, 60, "No");
-    }
-
-    interface->refreshUI();
-
-    //player chooses pokemon
-    Pokemon *chosenPokemon;
-    while (true) {
-        const char choice = interface->getchUI();
-        if (choice == '1') {
-            chosenPokemon = pokemon1;
-            break;
+        interface->mvaddstrUI(lineNumber, 0, "Move 2: ");
+        if (pokemon1->moves.size() > 1) {
+            interface->mvaddstrUI(lineNumber, 20, pokemon1->moves.at(1)->name.c_str());
+        } else {
+            interface->mvaddstrUI(lineNumber, 20, "none");
         }
-        else if (choice == '2') {
-            chosenPokemon = pokemon2;
-            break;
+        if (pokemon1->moves.size() > 1) {
+            interface->mvaddstrUI(lineNumber, 40, pokemon2->moves.at(1)->name.c_str());
+        } else {
+            interface->mvaddstrUI(lineNumber, 40, "none");
         }
-        else if (choice == '3') {
-            chosenPokemon = pokemon3;
-            break;
+        if (pokemon1->moves.size() > 1) {
+            interface->mvaddstrUI(lineNumber, 60, pokemon3->moves.at(1)->name.c_str());
+        } else {
+            interface->mvaddstrUI(lineNumber, 60, "none");
         }
-        else {
-            interface->mvaddstrUI(0, 0, &choice);
-            interface->addstrUI(" is not a valid input. Please input 1/2/3 to choose the respective starting pokemon!");
+        lineNumber++;
+
+        interface->mvaddstrUI(lineNumber, 0, "HP: ");
+        interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getHealth()).c_str());
+        interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getHealth()).c_str());
+        interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getHealth()).c_str());
+        lineNumber++;
+
+        interface->mvaddstrUI(lineNumber, 0, "Attack: ");
+        interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getAttack()).c_str());
+        interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getAttack()).c_str());
+        interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getAttack()).c_str());
+        lineNumber++;
+
+        interface->mvaddstrUI(lineNumber, 0, "Defense: ");
+        interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getDefense()).c_str());
+        interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getDefense()).c_str());
+        interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getDefense()).c_str());
+        lineNumber++;
+
+        interface->mvaddstrUI(lineNumber, 0, "Special Attack: ");
+        interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getSpecialAttack()).c_str());
+        interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getSpecialAttack()).c_str());
+        interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getSpecialAttack()).c_str());
+        lineNumber++;
+
+        interface->mvaddstrUI(lineNumber, 0, "Special Defense: ");
+        interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getSpecialDefense()).c_str());
+        interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getSpecialDefense()).c_str());
+        interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getSpecialDefense()).c_str());
+        lineNumber++;
+
+        interface->mvaddstrUI(lineNumber, 0, "Speed: ");
+        interface->mvaddstrUI(lineNumber, 20, std::to_string(pokemon1->getSpeed()).c_str());
+        interface->mvaddstrUI(lineNumber, 40, std::to_string(pokemon2->getSpeed()).c_str());
+        interface->mvaddstrUI(lineNumber, 60, std::to_string(pokemon3->getSpeed()).c_str());
+        lineNumber++;
+
+        interface->mvaddstrUI(lineNumber, 0, "Gender: ");
+        if (pokemon1->male == true) {
+            interface->mvaddstrUI(lineNumber, 20, "Male");
+        } else {
+            interface->mvaddstrUI(lineNumber, 20, "Female");
         }
+        if (pokemon2->male == true) {
+            interface->mvaddstrUI(lineNumber, 40, "Male");
+        } else {
+            interface->mvaddstrUI(lineNumber, 40, "Female");
+        }
+        if (pokemon3->male == true) {
+            interface->mvaddstrUI(lineNumber, 60, "Male");
+        } else {
+            interface->mvaddstrUI(lineNumber, 60, "Female");
+        }
+        lineNumber++;
+
+        interface->mvaddstrUI(lineNumber, 0, "Shiny: ");
+        if (pokemon1->shiny == true) {
+            interface->mvaddstrUI(lineNumber, 20, "Yes");
+        } else {
+            interface->mvaddstrUI(lineNumber, 20, "No");
+        }
+        if (pokemon2->shiny == true) {
+            interface->mvaddstrUI(lineNumber, 40, "Yes");
+        } else {
+            interface->mvaddstrUI(lineNumber, 40, "No");
+        }
+        if (pokemon3->shiny == true) {
+            interface->mvaddstrUI(lineNumber, 60, "Yes");
+        } else {
+            interface->mvaddstrUI(lineNumber, 60, "No");
+        }
+
+        interface->refreshUI();
+
+        //player chooses pokemon
+        Pokemon *chosenPokemon;
+        while (true) {
+            const char choice = interface->getchUI();
+            if (choice == '1') {
+                chosenPokemon = pokemon1;
+                break;
+            } else if (choice == '2') {
+                chosenPokemon = pokemon2;
+                break;
+            } else if (choice == '3') {
+                chosenPokemon = pokemon3;
+                break;
+            } else {
+                interface->mvaddstrUI(0, 0, &choice);
+                interface->addstrUI(
+                        " is not a valid input. Please input 1/2/3 to choose the respective starting pokemon!");
+            }
+        }
+        playerCharacter->activePokemon.push_back(chosenPokemon);
+
     }
-    playerCharacter->activePokemon.push_back(chosenPokemon);
+
+    return 0;
+
+}
+
+int select_pokemon_cheating(Character *playerCharacter) {
+
+    PokemonInfo *pokemonInfo = new PokemonInfo("99999", "Professor Sheaffer", "99999", "6",
+                                               "200", "1000", "1", "1");
+    std::vector<Move *> moves;
+    Move *move1 = new Move("99996", "Assign Homework", "99999", "99999", "100",
+                           "100", "100", "100", "99999", "99999",
+                           "99999","100", "99999", "99999",
+                           "99999");
+    Move *move2 = new Move("99997", "Cancel Exam", "99999", "99999", "0",
+                           "100", "100", "100", "99999", "99999",
+                           "99999","100", "99999", "99999",
+                           "99999");
+    Move *move3 = new Move("99998", "Calculator Show and Tell", "99999", "99999", "200",
+                           "100", "50", "100", "99999", "99999",
+                           "99999","100", "99999", "99999",
+                           "99999");
+    Move *move4 = new Move("99999", "Donald Duck Show and Tell", "99999", "99999", "500",
+                           "100", "50", "100", "99999", "99999",
+                           "99999","100", "99999", "99999",
+                           "99999");
+    moves.push_back(move1);
+    moves.push_back(move2);
+    moves.push_back(move3);
+    moves.push_back(move4);
+    Pokemon *pokemon = new Pokemon(pokemonInfo, 100, 100, 100, 100,
+                                   100, 100, 50, moves, true, true);
+    playerCharacter->activePokemon.push_back(pokemon);
 
     return 0;
 
