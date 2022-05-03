@@ -11,6 +11,8 @@
 #include <thread>
 #include "heap.h"
 
+//Author Maxim Popov
+
 #define SCREEN_HEIGHT 24
 #define TILE_WIDTH_X 80
 #define TILE_LENGTH_Y 21
@@ -45,7 +47,6 @@ int levelUpExperienceCost[] = {0, 0, 6, 21, 51, 100, 172, 274, 409, 583,
    474163, 491300, 508844, 526802, 545177, 563975, 583200, 602856, 622950,
    643485, 664467, 685900, 707788, 730138, 752953, 776239, 800000};
 
-//Author Maxim Popov
 enum character_type {
     PLAYER,
     RIVAL,
@@ -53,7 +54,8 @@ enum character_type {
     RANDOM_WALKER,
     PACER,
     WANDERER,
-    STATIONARY
+    STATIONARY,
+    BOSS
 };
 
 enum combat_option {
@@ -80,16 +82,26 @@ public:
         rival_weight(rival_weight), hiker_weight(hiker_weight), color(color) {}
 };
 
-static Terrain *none = new Terrain(0, '_', 0, 0, 0, 0, BLACK);
-static Terrain *edge = new Terrain(1, '%', INT_MAX, INT_MAX, INT_MAX, INT_MAX, WHITE);
-static Terrain *clearing = new Terrain(2, '.', 5, 10, 10, 5, YELLOW);
-static Terrain *grass = new Terrain(3, ',', 10, 15, 15, 5, GREEN);
-static Terrain *forest = new Terrain(4, '^', 100, INT_MAX, INT_MAX, 10, GREEN);
-static Terrain *mountain = new Terrain(5, '%', 150, INT_MAX, INT_MAX, 10, WHITE);
-static Terrain *lake = new Terrain(6, '~', 200, INT_MAX, INT_MAX, INT_MAX, BLUE);
-static Terrain *path = new Terrain(7, '#', 0, 5, 5, 5, YELLOW);
-static Terrain *center = new Terrain(8, 'C', INT_MAX, 5, INT_MAX, INT_MAX, MAGENTA);
-static Terrain *mart = new Terrain(9, 'M', INT_MAX, 5, INT_MAX, INT_MAX, MAGENTA);
+static Terrain *none = new Terrain(0, '_', 0, 0, 0,
+                                   0, BLACK);
+static Terrain *edge = new Terrain(1, '%', INT_MAX, INT_MAX, INT_MAX,
+                                   INT_MAX, WHITE);
+static Terrain *clearing = new Terrain(2, '.', 5, 10, 10,
+                                       5, YELLOW);
+static Terrain *grass = new Terrain(3, ',', 10, 15, 15,
+                                    5, GREEN);
+static Terrain *forest = new Terrain(4, '^', 100, INT_MAX, INT_MAX,
+                                     10, GREEN);
+static Terrain *mountain = new Terrain(5, '%', 150, INT_MAX, INT_MAX,
+                                       10, WHITE);
+static Terrain *lake = new Terrain(6, '~', 200, INT_MAX, INT_MAX,
+                                   INT_MAX, BLUE);
+static Terrain *path = new Terrain(7, '#', 0, 5, 5,
+                                   5, YELLOW);
+static Terrain *center = new Terrain(8, 'C', INT_MAX, 5, INT_MAX,
+                                     INT_MAX, MAGENTA);
+static Terrain *mart = new Terrain(9, 'M', INT_MAX, 5, INT_MAX,
+                                   INT_MAX, MAGENTA);
 
 //commented due to failing make
 //class DatabaseInfo {
@@ -636,6 +648,7 @@ public:
     bool gainExperience(int amount) {
         this->experience += amount;
         bool levelUp = false;
+        //todo: update max health and current health
         while (level + 1 <= MAXIMUM_LEVEL && experience > levelUpExperienceCost[level + 1]) {
             level++;
             levelUp = true;
@@ -860,6 +873,7 @@ int set_terrain_border_weights(Tile *tile);
 int generate_paths(Tile *tile, int north_x, int south_x, int east_y, int west_y);
 int generate_buildings(Tile *tile, int x, int y);
 int place_building(Tile *tile, Terrain terrain, double chance);
+int place_final_boss(Tile *tile);
 int place_player_character(Tile *tile);
 int select_pokemon(Character *playerCharacter);
 int select_pokemon_cheating(Character *playerCharacter);
@@ -978,7 +992,8 @@ public:
     void attroffUI(int i) {}
 };
 
-//todo: ASSIGNED: in interface->getchUI check if input is 'Q', if yes go to quit screen, if no continue. Continue would mean 'Q' would be sent to caller though and it would try to parse it too.
+//todo: ASSIGNED: in interface->getchUI check if input is 'Q', if yes go to quit screen, if no continue. Continue would
+    //^mean 'Q' would be sent to caller though and it would try to parse it too.
 
 //todo: ASSIGNED: set filePath to main file location ("." doesn't work)
 //todo: ASSIGNED: set file path to "" pre submission
@@ -1106,10 +1121,12 @@ int main(int argc, char *argv[]) {
     current_tile_y = WORLD_CENTER_Y;
     Tile home_tile = create_tile(WORLD_CENTER_X, WORLD_CENTER_Y);
     world[WORLD_CENTER_Y][WORLD_CENTER_X] = &home_tile;
+    place_final_boss(world[current_tile_y][current_tile_x]);
     place_player_character(world[current_tile_y][current_tile_x]);
     while (turn_based_movement() == -1) {
         //-1 signals map was changed: call turn_based_movement for new map/turn heap
-        //old and new Tile and heap have been updated correctly in change Tile (removed from old heap in turn_based_movement)
+        //old and new Tile and heap have been updated correctly in change Tile
+            //(removed from old heap in turn_based_movement)
     }
     interface->endwinUI();
     return 0;
@@ -3904,6 +3921,34 @@ int place_building(Tile *tile, Terrain terrain, double chance) {
         }
         tile->tile[y][x].terrain = terrain;
     }
+
+    return 0;
+
+}
+
+int place_final_boss(Tile *tile) {
+
+        int x;
+        int y;
+        int found = 0;
+        while (found == 0) {
+            x = rand() % 78 + 1;
+            y = rand() % 19 + 1;
+            if (tile->tile[y][x].character == NULL && tile->tile[y][x].terrain.id == path->id) {
+                found = 1;
+            }
+        }
+        Character *trainer = new Character(x, y, BOSS, "BIG BAD BOSS", 'B',
+                                           RED, 0, 0, 0, 0,
+                                           0, 0);
+        for (int i = 0; i < 6; i++) {
+            Pokemon *pokemon = create_pokemon();
+            pokemon->level = 10;
+            pokemon->maxHealth += 50;
+            pokemon->health += 50;
+            trainer->activePokemon.push_back(pokemon);
+        }
+        tile->tile[y][x].character = trainer;
 
     return 0;
 
