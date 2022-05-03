@@ -840,7 +840,7 @@ int getWildPokemonMove(Pokemon *wildPokemon);
 int doCombat(Pokemon *friendlyPokemon, int friendlyPokemonMoveIndex, Pokemon *enemyPokemon, int enemyPokemonMoveIndex,
              bool trainerBattle);
 int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon, bool trainerBattle);
-int battlePause();
+int awaitInputEscape();
 int fight_action(Pokemon *selectedPokemon);
 Pokemon *switch_pokemon_action(Pokemon *selectedPokemon, bool mustSwitch);
 int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyPokemon);
@@ -2920,25 +2920,24 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon, 
         interface->addstrUI(std::to_string(experience).c_str());
         interface->addstrUI(" experience!");
         interface->refreshUI();
-        battlePause();
+        awaitInputEscape();
         if (attackingPokemon->gainExperience(experience)) {
             levelUp(attackingPokemon);
         }
     }
     interface->refreshUI();
-    battlePause();
+    awaitInputEscape();
 
     return 0;
 
 }
 
-int battlePause() {
+/*
+ * Waits for the user to input esc.
+ */
+int awaitInputEscape() {
 
-    //todo: ASSIGNED: do esc for message rather than forced pause. Just as follows:
-    //while(interface.getchUI() != 27){}
-
-    std::chrono::seconds dura(5);
-    std::this_thread::sleep_for(dura);
+    while(interface->getchUI() != 27) {}
 
     return 0;
 
@@ -3170,7 +3169,7 @@ int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyP
                 interface->addstrUI("/");
                 interface->addstrUI(std::to_string(selectedPokemon->maxHealth).c_str());
                 interface->refreshUI();
-                battlePause();
+                awaitInputEscape();
                 return 0;
             }
             else {
@@ -3190,7 +3189,7 @@ int bag_action(bool wildPokemonBattle, Pokemon *selectedPokemon, Pokemon *enemyP
                 interface->addstrUI("/");
                 interface->addstrUI(std::to_string(selectedPokemon->maxHealth).c_str());
                 interface->refreshUI();
-                battlePause();
+                awaitInputEscape();
                 return 0;
             }
             else if (reviveUsage == 1) {
@@ -3247,7 +3246,7 @@ int usePokeball(bool success, Pokemon *targetPokemon) {
         interface->addstrUI(targetPokemon->pokemonInfo->name.c_str());
         interface->addstrUI("!");
         interface->refreshUI();
-        battlePause();
+        awaitInputEscape();
         return -1;
     }
     else {
@@ -3255,7 +3254,7 @@ int usePokeball(bool success, Pokemon *targetPokemon) {
         interface->addstrUI(targetPokemon->pokemonInfo->name.c_str());
         interface->addstrUI("!");
         interface->refreshUI();
-        battlePause();
+        awaitInputEscape();
 
         return 0;
     }
@@ -3290,14 +3289,14 @@ int run_action(Pokemon *characterPokemon, Pokemon *wildPokemon, int numAttempts)
         interface->clearUI();
         interface->addstrUI("You successfully ran away!");
         interface->refreshUI();
-        battlePause();
+        awaitInputEscape();
         return 0;
     }
     else {
         interface->clearUI();
         interface->addstrUI("You were too slow to run away! Maybe you'll be able to next time!");
         interface->refreshUI();
-        battlePause();
+        awaitInputEscape();
         return 1;
     }
 
@@ -3316,7 +3315,7 @@ int levelUp(Pokemon *pokemon) {
     interface->addstrUI("/");
     interface->addstrUI(std::to_string(levelUpExperienceCost[pokemon->level + 1]).c_str());
     interface->refreshUI();
-    battlePause();
+    awaitInputEscape();
 
     return 0;
 
