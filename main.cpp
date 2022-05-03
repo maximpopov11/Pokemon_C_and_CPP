@@ -2538,7 +2538,7 @@ int combat_trainer(Character *opponent) {
             }
         }
     }
-    if (cheating) {
+    if (opponent->type_enum == BOSS) {
         bossBattleFinished(victory);
     }
     else {
