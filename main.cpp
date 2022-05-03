@@ -1603,21 +1603,23 @@ int cheat_toggle_question() {
         char input = interface->getchUI();
         if (input == 'y') {
             cheat = true;
+            break;
         }
         else if (input == 'n') {
             cheat = false;
+            break;
         }
     }
 
     //Message post response
     if (cheat) {
         interface->clearUI();
-        interface->mvaddstrUI(0, 0,"Why do you cheat in a game like this? Like seriously, what’s the point? Do you");
+        interface->mvaddstrUI(0, 0,"Why do you cheat in a game like this? Like seriously, what is the point? Do you");
         interface->mvaddstrUI(1, 0, "get some feeling of pleasure by proving to yourself that you can beat this");
-        interface->mvaddstrUI(2, 0, "little game while cheating? Well, you made your choice. I’ll give you good");
+        interface->mvaddstrUI(2, 0, "little game while cheating? Well, you made your choice. Ill give you good");
         interface->mvaddstrUI(3, 0, "company. I think you know your pokemon already, so no need for me to give you");
-        interface->mvaddstrUI(4, 0, "the name. You’ll find out when you battle anyway. Good luck! Not that you’ll");
-        interface->mvaddstrUI(5, 0, "need it you cheater!");
+        interface->mvaddstrUI(4, 0, "the name. You will find out when you battle anyway. Good luck! Not that you");
+        interface->mvaddstrUI(5, 0, "will need it you cheater!");
         interface->refreshUI();
     }
     else {
