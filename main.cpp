@@ -848,6 +848,7 @@ int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
 int combat_trainer(Character *opponent);
 int bossDialog();
+int bossBattleFinished(bool victory);
 Pokemon * create_pokemon();
 int combat_pokemon(Pokemon *wildPokemon);
 int getWildPokemonMove(Pokemon *wildPokemon);
@@ -2537,26 +2538,30 @@ int combat_trainer(Character *opponent) {
             }
         }
     }
-    if (victory) {
-        opponent->defeated = true;
-        opponent->color = MAGENTA;
-        interface->clearUI();
-        interface->addstrUI("Victory! You have defeated a trainer! Press esc to continue.");
-        interface->refreshUI();
-        while (interface->getchUI() != 27) {
-            interface->clearUI();
-            interface->addstrUI("Invalid input. You won the battle. Press esc to continue.");
-            interface->refreshUI();
-        }
+    if (cheating) {
+        bossBattleFinished(victory);
     }
     else {
-        interface->clearUI();
-        interface->addstrUI("Defeat! You have been defeated by a trainer! Press esc to continue.");
-        interface->refreshUI();
-        while (interface->getchUI() != 27) {
+        if (victory) {
+            opponent->defeated = true;
+            opponent->color = MAGENTA;
             interface->clearUI();
-            interface->addstrUI("Invalid input. You lost the battle. Press esc to continue.");
+            interface->addstrUI("Victory! You have defeated a trainer! Press esc to continue.");
             interface->refreshUI();
+            while (interface->getchUI() != 27) {
+                interface->clearUI();
+                interface->addstrUI("Invalid input. You won the battle. Press esc to continue.");
+                interface->refreshUI();
+            }
+        } else {
+            interface->clearUI();
+            interface->addstrUI("Defeat! You have been defeated by a trainer! Press esc to continue.");
+            interface->refreshUI();
+            while (interface->getchUI() != 27) {
+                interface->clearUI();
+                interface->addstrUI("Invalid input. You lost the battle. Press esc to continue.");
+                interface->refreshUI();
+            }
         }
     }
 
@@ -2598,6 +2603,52 @@ int bossDialog() {
             break;
         }
     }
+    awaitInputEscape();
+
+    return 0;
+
+}
+
+int bossBattleFinished(bool victory) {
+
+    interface->clearUI();
+    if (victory) {
+        if (cheating) {
+            interface->mvaddstrUI(0, 0,
+                                  "You only won because you cheated! Why even cheat if you could haveprofessor");
+            interface->mvaddstrUI(1, 0,
+
+                                  "Sheaffer do the assembly assignment for you? Well, now you have nothing to play");
+            interface->mvaddstrUI(2, 0,
+                                  "for. Unless you want to venture off of this map into the lands of segfaults,");
+            interface->mvaddstrUI(3, 0,
+                                  "try cheating yourself out of that one!");
+        }
+        else {
+            interface->mvaddstrUI(0, 0,
+                                  "You were a worthy opponent. Perhaps you can rule better than I ever did, and");
+            interface->mvaddstrUI(1, 0,
+                                  "overcome the dangers of the segfaults outside of this map. I wish you luck in");
+            interface->mvaddstrUI(2, 0,
+                                  "your ventures there.");
+        }
+    }
+    else {
+        if (cheating) {
+            interface->mvaddstrUI(0, 0,
+                                  "Ha! You could not defeat me even while cheating! Go get stronger and fight me");
+            interface->mvaddstrUI(1, 0,
+                                  "again, I want a real battle this time!");
+        }
+        else {
+            interface->mvaddstrUI(0, 0,
+                                  "Ha! You could never defeat me! Go get stronger and fight me again!");
+            interface->mvaddstrUI(1, 0,
+                                  "I want a real battle this time!");
+        }
+    }
+    interface->refreshUI();
+
     awaitInputEscape();
 
     return 0;
@@ -4190,7 +4241,7 @@ int select_pokemon_cheating(Character *playerCharacter) {
     PokemonInfo *pokemonInfo = new PokemonInfo("99999", "Professor Sheaffer", "99999", "6",
                                                "200", "1000", "1", "1");
     std::vector<Move *> moves;
-    Move *move1 = new Move("99996", "Assign Homework", "99999", "99999", "100",
+    Move *move1 = new Move("99996", "Assign Homework", "99999", "99999", "20",
                            "100", "100", "100", "99999", "99999",
                            "99999","100", "99999", "99999",
                            "99999");
@@ -4198,11 +4249,11 @@ int select_pokemon_cheating(Character *playerCharacter) {
                            "100", "100", "100", "99999", "99999",
                            "99999","100", "99999", "99999",
                            "99999");
-    Move *move3 = new Move("99998", "Calculator Show and Tell", "99999", "99999", "200",
+    Move *move3 = new Move("99998", "Calculator Show and Tell", "99999", "99999", "25",
                            "100", "50", "100", "99999", "99999",
                            "99999","100", "99999", "99999",
                            "99999");
-    Move *move4 = new Move("99999", "Donald Duck Show and Tell", "99999", "99999", "500",
+    Move *move4 = new Move("99999", "Donald Duck Show and Tell", "99999", "99999", "100",
                            "100", "50", "100", "99999", "99999",
                            "99999","100", "99999", "99999",
                            "99999");
