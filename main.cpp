@@ -829,6 +829,7 @@ int storePokemonTypes();
 //commented due to database info failing to make
 //int printData(std::vector<DatabaseInfo *> dataVector);
 int story_intro();
+int cheat_toggle_question();
 int turn_based_movement();
 int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
@@ -1097,6 +1098,7 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
     interface->initializeTerminalUI();
     story_intro();
+    cheat_toggle_question();
     heap_init(&turn_heap, comparator_character_movement, NULL);
     current_tile_x = WORLD_CENTER_X;
     current_tile_y = WORLD_CENTER_Y;
@@ -1585,6 +1587,47 @@ int story_intro() {
 
     //continue with esc
     while(interface->getchUI() != 27) {}
+
+}
+
+int cheat_toggle_question() {
+
+    //Prompt
+    interface->clearUI();
+    interface->addstrUI("Would you like to cheat? (y/n)");
+    interface->refreshUI();
+
+    //Response
+    bool cheat;
+    while (true) {
+        char input = interface->getchUI();
+        if (input == 'y') {
+            cheat = true;
+        }
+        else if (input == 'n') {
+            cheat = false;
+        }
+    }
+
+    //Message post response
+    if (cheat) {
+        interface->clearUI();
+        interface->mvaddstrUI(0, 0,"Why do you cheat in a game like this? Like seriously, what’s the point? Do you");
+        interface->mvaddstrUI(1, 0, "get some feeling of pleasure by proving to yourself that you can beat this");
+        interface->mvaddstrUI(2, 0, "little game while cheating? Well, you made your choice. I’ll give you good");
+        interface->mvaddstrUI(3, 0, "company. I think you know your pokemon already, so no need for me to give you");
+        interface->mvaddstrUI(4, 0, "the name. You’ll find out when you battle anyway. Good luck! Not that you’ll");
+        interface->mvaddstrUI(5, 0, "need it you cheater!");
+        interface->refreshUI();
+    }
+    else {
+        interface->clearUI();
+        interface->mvaddstrUI(0, 0,"You're not cheating? Good. Too many people cheat. Way to be a fair player!");
+        interface->refreshUI();
+    }
+
+    //Continue with esc
+    while (interface->getchUI() != 27) {};
 
 }
 
