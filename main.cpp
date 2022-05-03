@@ -1553,7 +1553,15 @@ int storePokemonTypes() {
 
 int story_intro() {
 
-    //text
+    //meme hello world
+    interface->clearUI();
+    interface->mvaddstrUI(0, 0, "Hello, world!");
+    interface->refreshUI();
+
+    //continue with esc
+    while(interface->getchUI() != 27) {}
+
+    //text intro
     interface->clearUI();
     interface->mvaddstrUI(1, 18, "A long time ago, in a galaxy far, far away...");
     interface->mvaddstrUI(3, 31, "Pokemon C and CPP");
@@ -1575,6 +1583,7 @@ int story_intro() {
     interface->mvaddstrUI(22, 15, "must defeat him to bring balance to the class!");
     interface->refreshUI();
 
+    //continue with esc
     while(interface->getchUI() != 27) {}
 
 }
@@ -2879,7 +2888,8 @@ int attack(Pokemon *attackingPokemon, int moveIndex, Pokemon *defendingPokemon, 
 
 int battlePause() {
 
-    //todo: ASSIGNED: do esc for message rather than forced pause
+    //todo: ASSIGNED: do esc for message rather than forced pause. Just as follows:
+    //while(interface.getchUI() != 27){}
 
     std::chrono::seconds dura(5);
     std::this_thread::sleep_for(dura);
