@@ -828,6 +828,7 @@ int storePokemonStats();
 int storePokemonTypes();
 //commented due to database info failing to make
 //int printData(std::vector<DatabaseInfo *> dataVector);
+int story_intro();
 int turn_based_movement();
 int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
@@ -1095,6 +1096,7 @@ int main(int argc, char *argv[]) {
     //run program
     srand(time(NULL));
     interface->initializeTerminalUI();
+    story_intro();
     heap_init(&turn_heap, comparator_character_movement, NULL);
     current_tile_x = WORLD_CENTER_X;
     current_tile_y = WORLD_CENTER_Y;
@@ -1548,6 +1550,34 @@ int storePokemonTypes() {
 //    return 0;
 //
 //}
+
+int story_intro() {
+
+    //text
+    interface->clearUI();
+    interface->mvaddstrUI(1, 18, "A long time ago, in a galaxy far, far away...");
+    interface->mvaddstrUI(3, 31, "Pokemon C and CPP");
+    interface->mvaddstrUI(5, 24, "Episode IV: The Big Bad Trainer");
+    interface->mvaddstrUI(7, 15, "It  is a  period  of  civil  war. Rebel  trainers,");
+    interface->mvaddstrUI(8, 15, "striking from a hidden base,  have won their first");
+    interface->mvaddstrUI(9, 15, "victory against the evil Big Bad Trainers.  During");
+    interface->mvaddstrUI(10, 15, "the battle,  Rebel spies  managed to  steal secret");
+    interface->mvaddstrUI(11, 15, "plans  to  the  Big Bad Trainers  ultimate weapon,");
+    interface->mvaddstrUI(12, 15, "the  ASSEMBLY PROJECT,  an assignment  with enough");
+    interface->mvaddstrUI(13, 15, "instructions to  fill several  textbooks  and melt");
+    interface->mvaddstrUI(14, 15, "the brain of any  unfortunate student  assigned to");
+    interface->mvaddstrUI(15, 15, "complete the project.");
+    interface->mvaddstrUI(17, 15, "Pursued by the Trainer  sinister  agents, you race");
+    interface->mvaddstrUI(18, 15, "home along  the path,  dodging segfaults  left and");
+    interface->mvaddstrUI(19, 15, "right.  You are  stranded  on a  map full  of evil");
+    interface->mvaddstrUI(20, 15, "trainers, led by the Big Bad Trainer himself. With");
+    interface->mvaddstrUI(21, 15, "but a  single Pokemon  you brought  with you,  you");
+    interface->mvaddstrUI(22, 15, "must defeat him to bring balance to the class!");
+    interface->refreshUI();
+
+    while(interface->getchUI() != 27) {}
+
+}
 
 int turn_based_movement() {
 
