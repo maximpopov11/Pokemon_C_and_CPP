@@ -847,6 +847,7 @@ int turn_based_movement();
 int player_turn();
 int move_character(int x, int y, int new_x, int new_y);
 int combat_trainer(Character *opponent);
+int bossDialog();
 Pokemon * create_pokemon();
 int combat_pokemon(Pokemon *wildPokemon);
 int getWildPokemonMove(Pokemon *wildPokemon);
@@ -2429,6 +2430,10 @@ int move_character(int x, int y, int new_x, int new_y) {
 
 int combat_trainer(Character *opponent) {
 
+    if (opponent->type_enum == BOSS) {
+        bossDialog();
+    }
+
     bool victory = false;
     bool battleOver = false;
     int numRunAttempts = 0;
@@ -2554,6 +2559,46 @@ int combat_trainer(Character *opponent) {
             interface->refreshUI();
         }
     }
+
+    return 0;
+
+}
+
+int bossDialog() {
+
+    //monologue 1
+    interface->clearUI();
+    interface->mvaddstrUI(0, 0,"Ah, so youre the one who stole my assignment plans. How nice of you to come");
+    interface->mvaddstrUI(1, 0,"here, right to me. I shall enjoy defeating you.");
+    interface->mvaddstrUI(3, 0,"Response:");
+    interface->mvaddstrUI(4, 0,"1. I fight for what is right!");
+    interface->mvaddstrUI(5, 0,"2. I will destroy you!");
+    interface->mvaddstrUI(6, 0,"3. I don't know where I am!");
+    interface->refreshUI();
+
+    //user response and boss counter response
+    while (true) {
+        char input = interface->getchUI();
+        if (input == '1') {
+            interface->clearUI();
+            interface->mvaddstrUI(0, 0,"You rebels always think that, but youre wrong! Let us battle!");
+            interface->refreshUI();
+            break;
+        }
+        else if (input == '2') {
+            interface->clearUI();
+            interface->mvaddstrUI(0, 0,"How bold of you to think that. Let us battle!");
+            interface->refreshUI();
+            break;
+        }
+        else if (input == '3') {
+            interface->clearUI();
+            interface->mvaddstrUI(0, 0,"How... disappointing. Let us battle!");
+            interface->refreshUI();
+            break;
+        }
+    }
+    awaitInputEscape();
 
     return 0;
 
